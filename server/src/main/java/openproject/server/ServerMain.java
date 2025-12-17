@@ -4,12 +4,10 @@ import openproject.server.auth.CustomDatabaseAuthenticator;
 import openproject.server.db.DatabaseManager;
 import openproject.server.fs.VecturaFileSystemFactory;
 
+import openproject.server.sftp.VecturaSftpSubsystemFactory;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
-import org.apache.sshd.sftp.server.SftpSubsystemFactory;
-import org.apache.sshd.server.forward.AcceptAllForwardingFilter;
 import org.apache.sshd.server.forward.RejectAllForwardingFilter;
-import org.apache.sshd.common.PropertyResolverUtils;
 import org.apache.sshd.core.CoreModuleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +33,7 @@ public class ServerMain {
             sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(new File("hostkey.ser").toPath()));
 
             // Habilitar protocolo de transferencia de archivos
-            sshd.setSubsystemFactories(Collections.singletonList(new SftpSubsystemFactory()));
+            sshd.setSubsystemFactories(Collections.singletonList(new VecturaSftpSubsystemFactory()));
 
             // Credenciales temporales
             sshd.setPasswordAuthenticator(new CustomDatabaseAuthenticator(dbManager));
