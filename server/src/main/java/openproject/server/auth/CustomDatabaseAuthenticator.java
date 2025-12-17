@@ -1,6 +1,7 @@
 package openproject.server.auth;
 
 import openproject.server.db.DatabaseManager;
+import org.apache.sshd.common.AttributeRepository;
 import org.apache.sshd.server.auth.AsyncAuthException;
 import org.apache.sshd.server.auth.password.PasswordAuthenticator;
 import org.apache.sshd.server.auth.password.PasswordChangeRequiredException;
@@ -16,6 +17,7 @@ import java.sql.ResultSet;
 public class CustomDatabaseAuthenticator implements PasswordAuthenticator {
     private static final Logger LOG = LoggerFactory.getLogger(CustomDatabaseAuthenticator.class);
     private final DatabaseManager dbManager;
+    public static final AttributeRepository.AttributeKey<String> USER_HOME_DIR_KEY = new AttributeRepository.AttributeKey<>();
 
     public CustomDatabaseAuthenticator(DatabaseManager dbManager) {
         this.dbManager = dbManager;
@@ -27,7 +29,7 @@ public class CustomDatabaseAuthenticator implements PasswordAuthenticator {
 
         try (Connection conn = dbManager.getConnection()) {
             // Busqueda de hash y usuario activo
-            String query = "select password_hash from users where username = ? and is_active = TRUE";
+            String query = "select password_hash, home_dir from users where username = ? and is_active = TRUE";
 
             try (PreparedStatement ps = conn.prepareStatement(query)) {
                 ps.setString(1, username);
@@ -38,6 +40,10 @@ public class CustomDatabaseAuthenticator implements PasswordAuthenticator {
 
                         // BCrypt verifica el hash
                         if (BCrypt.checkpw(password, passwordHash)) {
+                            String homeDir = rs.getString("home_dir"); // Recuperar ruta de la bd
+
+                            // Guardar ruta en sesion
+                            serverSession.setAttribute(USER_HOME_DIR_KEY, homeDir);
                             LOG.info("Authentication successful for '{}'", username);
                             return true;
                         } else {

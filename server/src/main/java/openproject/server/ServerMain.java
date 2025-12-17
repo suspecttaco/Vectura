@@ -2,6 +2,7 @@ package openproject.server;
 
 import openproject.server.auth.CustomDatabaseAuthenticator;
 import openproject.server.db.DatabaseManager;
+import openproject.server.fs.VecturaFileSystemFactory;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.sftp.server.SftpSubsystemFactory;
@@ -33,9 +34,12 @@ public class ServerMain {
             // Credenciales temporales
             sshd.setPasswordAuthenticator(new CustomDatabaseAuthenticator(dbManager));
 
+            // Enjaular usuario
+            sshd.setFileSystemFactory(new VecturaFileSystemFactory());
+
             // Iniciar
             sshd.start();
-            LOG.info("Server started in port: " + sshd.getPort());
+            LOG.info("Server started in port: {}", sshd.getPort());
 
             // Mantener vivo
             Thread.sleep(Long.MAX_VALUE);
