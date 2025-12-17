@@ -3,13 +3,19 @@ package openproject.server;
 import openproject.server.auth.CustomDatabaseAuthenticator;
 import openproject.server.db.DatabaseManager;
 import openproject.server.fs.VecturaFileSystemFactory;
+
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.sftp.server.SftpSubsystemFactory;
+import org.apache.sshd.server.forward.AcceptAllForwardingFilter;
+import org.apache.sshd.server.forward.RejectAllForwardingFilter;
+import org.apache.sshd.common.PropertyResolverUtils;
+import org.apache.sshd.core.CoreModuleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.Collections;
 
 public class ServerMain {
@@ -36,6 +42,24 @@ public class ServerMain {
 
             // Enjaular usuario
             sshd.setFileSystemFactory(new VecturaFileSystemFactory());
+
+            // Deshabilitar shell
+            sshd.setShellFactory(null);
+
+            // Deshabilitar comandos exec
+            sshd.setCommandFactory(null);
+
+            // Deshabilitar pport forwarding
+            sshd.setForwardingFilter(RejectAllForwardingFilter.INSTANCE);
+
+            // Timeout de 10s para autenticar
+            CoreModuleProperties.AUTH_TIMEOUT.set(sshd, Duration.ofSeconds(10));
+
+            // Inactividad de 5 min.
+            CoreModuleProperties.IDLE_TIMEOUT.set(sshd, Duration.ofMinutes(5));
+
+            // Limite de conexiones
+            CoreModuleProperties.MAX_CONCURRENT_SESSIONS.set(sshd, 10);
 
             // Iniciar
             sshd.start();
