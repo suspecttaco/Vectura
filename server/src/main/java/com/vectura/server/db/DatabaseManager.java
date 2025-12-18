@@ -1,4 +1,4 @@
-package openproject.server.db;
+package com.vectura.server.db;
 
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;

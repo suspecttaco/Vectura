@@ -1,6 +1,6 @@
-package openproject.server.auth;
+package com.vectura.server.auth;
 
-import openproject.server.db.DatabaseManager;
+import com.vectura.server.db.DatabaseManager;
 import org.apache.sshd.common.AttributeRepository;
 import org.apache.sshd.server.auth.AsyncAuthException;
 import org.apache.sshd.server.auth.password.PasswordAuthenticator;

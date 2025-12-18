@@ -1,10 +1,10 @@
-package openproject.server;
+package com.vectura.server;
 
-import openproject.server.auth.CustomDatabaseAuthenticator;
-import openproject.server.db.DatabaseManager;
-import openproject.server.fs.VecturaFileSystemFactory;
+import com.vectura.server.auth.CustomDatabaseAuthenticator;
+import com.vectura.server.db.DatabaseManager;
+import com.vectura.server.fs.VecturaFileSystemFactory;
 
-import openproject.server.sftp.VecturaSftpSubsystemFactory;
+import com.vectura.server.sftp.VecturaSftpSubsystemFactory;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.server.forward.RejectAllForwardingFilter;

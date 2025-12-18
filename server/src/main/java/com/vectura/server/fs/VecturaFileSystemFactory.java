@@ -1,6 +1,6 @@
-package openproject.server.fs;
+package com.vectura.server.fs;
 
-import openproject.server.auth.CustomDatabaseAuthenticator;
+import com.vectura.server.auth.CustomDatabaseAuthenticator;
 
 import org.apache.sshd.common.file.FileSystemFactory;
 import org.apache.sshd.common.file.root.RootedFileSystemProvider;

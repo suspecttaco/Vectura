@@ -1,13 +1,12 @@
-package openproject.server.sftp;
+package com.vectura.server.sftp;
 
-import openproject.server.util.HashUtils;
+import com.vectura.server.util.HashUtils;
 
 import org.apache.sshd.common.util.buffer.Buffer;
 import org.apache.sshd.common.util.buffer.ByteArrayBuffer;
 import org.apache.sshd.server.channel.ChannelSession;
 import org.apache.sshd.sftp.server.SftpSubsystem;
 import org.apache.sshd.sftp.server.SftpSubsystemConfigurator;
-import org.apache.sshd.common.util.threads.CloseableExecutorService;
 import org.apache.sshd.sftp.common.SftpConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 
 public class VecturaSftpSubsystem extends SftpSubsystem {
     private static final Logger LOG = LoggerFactory.getLogger(VecturaSftpSubsystem.class);

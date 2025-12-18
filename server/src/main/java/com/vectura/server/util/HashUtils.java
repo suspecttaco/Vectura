@@ -1,4 +1,4 @@
-package openproject.server.util;
+package com.vectura.server.util;
 
 import java.io.InputStream;
 import java.nio.file.Files;

@@ -1,6 +1,5 @@
-package openproject.server.sftp;
+package com.vectura.server.sftp;
 
-import org.apache.sshd.common.util.threads.CloseableExecutorService;
 import org.apache.sshd.server.channel.ChannelSession;
 import org.apache.sshd.sftp.server.SftpSubsystem;
 import org.apache.sshd.sftp.server.SftpSubsystemFactory;
