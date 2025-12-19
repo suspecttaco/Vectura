@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+
+<BorderPane prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vectura.client.controller.DashboardController">
+
+    <stylesheets>
+        <URL value="@../css/styles.css" />
+    </stylesheets>
+
+    <top>
+        <VBox>
+            <ToolBar prefHeight="50.0" style="-fx-background-color: white; -fx-spacing: 10;">
+                <Button onAction="#handleUpload" styleClass="button-primary" text="Subir">
+                    <graphic><FontIcon iconColor="white" iconLiteral="fas-cloud-upload-alt" /></graphic>
+                </Button>
+                <Button onAction="#handleDownload" styleClass="button-primary" text="Bajar">
+                    <graphic><FontIcon iconColor="white" iconLiteral="fas-cloud-download-alt" /></graphic>
+                </Button>
+
+                <Separator orientation="VERTICAL" />
+
+                <Button onAction="#handleMkdir" styleClass="button-action" text="Nueva Carpeta">
+                    <graphic><FontIcon iconColor="#555" iconLiteral="fas-folder-plus" /></graphic>
+                </Button>
+                <Button onAction="#refreshBoth" styleClass="button-action" text="Actualizar">
+                    <graphic><FontIcon iconColor="#555" iconLiteral="fas-sync-alt" /></graphic>
+                </Button>
+                <Button onAction="#handleDelete" styleClass="button-danger" text="Borrar">
+                    <graphic><FontIcon iconColor="#dc3545" iconLiteral="fas-trash-alt" /></graphic>
+                </Button>
+
+                <Region HBox.hgrow="ALWAYS" />
+
+                <Button onAction="#handleDisconnect" styleClass="button-action" text="Desconectar">
+                    <graphic><FontIcon iconColor="#555" iconLiteral="fas-sign-out-alt" /></graphic>
+                </Button>
+            </ToolBar>
+        </VBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.7" orientation="VERTICAL" style="-fx-background-color: transparent; -fx-padding: 10;">
+
+            <SplitPane dividerPositions="0.5" style="-fx-background-color: transparent;">
+
+                <VBox spacing="8" style="-fx-padding: 0 10 10 0;">
+                    <HBox alignment="CENTER_LEFT" spacing="5">
+                        <Label styleClass="label-subtitle" text="Mi PC" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button onAction="#goLocalHome" styleClass="button-nav">
+                            <tooltip><Tooltip text="Ir a Inicio" /></tooltip>
+                            <graphic><FontIcon iconColor="#666" iconLiteral="fas-home" /></graphic>
+                        </Button>
+                        <Button onAction="#goLocalUp" styleClass="button-nav">
+                            <tooltip><Tooltip text="Subir Nivel" /></tooltip>
+                            <graphic><FontIcon iconColor="#666" iconLiteral="fas-arrow-up" /></graphic>
+                        </Button>
+                    </HBox>
+
+                    <TextField fx:id="localPathField" promptText="Ruta Local..." styleClass="address-field" />
+
+                    <TableView fx:id="localTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="localNameCol" prefWidth="220" text="Nombre" />
+                            <TableColumn fx:id="localSizeCol" prefWidth="90" text="Tamaño" />
+                            <TableColumn fx:id="localDateCol" prefWidth="130" text="Modificado" />
+                        </columns>
+                  <columnResizePolicy>
+                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                  </columnResizePolicy>
+                    </TableView>
+                </VBox>
+
+                <VBox spacing="8" style="-fx-padding: 0 0 10 10;">
+                    <HBox alignment="CENTER_LEFT" spacing="5">
+                        <Label styleClass="label-subtitle" text="Servidor Remoto" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button onAction="#goRemoteHome" styleClass="button-nav">
+                            <tooltip><Tooltip text="Ir a Raíz" /></tooltip>
+                            <graphic><FontIcon iconColor="#666" iconLiteral="fas-server" /></graphic>
+                        </Button>
+                        <Button onAction="#goRemoteUp" styleClass="button-nav">
+                            <tooltip><Tooltip text="Subir Nivel" /></tooltip>
+                            <graphic><FontIcon iconColor="#666" iconLiteral="fas-arrow-up" /></graphic>
+                        </Button>
+                    </HBox>
+
+                    <TextField fx:id="remotePathField" promptText="Ruta Remota..." styleClass="address-field" />
+
+                    <TableView fx:id="remoteTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="remoteNameCol" prefWidth="220" text="Nombre" />
+                            <TableColumn fx:id="remoteSizeCol" prefWidth="90" text="Tamaño" />
+                            <TableColumn fx:id="remoteDateCol" prefWidth="130" text="Modificado" />
+                        </columns>
+                  <columnResizePolicy>
+                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                  </columnResizePolicy>
+                    </TableView>
+                </VBox>
+            </SplitPane>
+
+            <VBox spacing="5" style="-fx-padding: 10 0 0 0;">
+                <Label style="-fx-font-weight: bold; -fx-text-fill: #555;" text="Cola de Transferencias" />
+
+                <TableView fx:id="queueTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="queueNameCol" prefWidth="300" text="Archivo" />
+                        <TableColumn fx:id="queueTypeCol" prefWidth="100" text="Dirección" />
+                        <TableColumn fx:id="queueStatusCol" prefWidth="150" text="Estado" />
+                        <TableColumn fx:id="queueProgressCol" prefWidth="200" text="Progreso" />
+                    </columns>
+                    <placeholder>
+                        <Label text="No hay transferencias activas" textFill="#999" />
+                    </placeholder>
+               <columnResizePolicy>
+                  <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+               </columnResizePolicy>
+                </TableView>
+            </VBox>
+
+        </SplitPane>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 5 10 5 10; -fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0 transparent transparent transparent;">
+            <Label fx:id="statusLabel" maxWidth="Infinity" text="Listo" textFill="#666" HBox.hgrow="ALWAYS" />
+            <ProgressBar fx:id="progressBar" prefWidth="200" progress="0.0" visible="false" />
+        </HBox>
+    </bottom>
+</BorderPane>

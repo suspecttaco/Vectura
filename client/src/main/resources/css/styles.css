@@ -1,0 +1,191 @@
+/* Roboto - Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+.root {
+    -fx-font-family: 'Roboto', sans-serif;
+    -fx-background-color: #f4f4f4;
+}
+
+/* Titulos */
+.label-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+.label-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #757575;
+}
+
+/* Campos de texto */
+.text-field, .password-field {
+    -fx-background-color: white;
+    -fx-background-radius: 4;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 4;
+    -fx-padding: 8;
+    -fx-font-size: 14px;
+}
+
+.text-field:focused, .password-field:focused {
+    -fx-border-color: #007bff;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,123,255,0.2), 5, 0, 0, 0);
+}
+
+/* --- BOTONES DE BARRA DE HERRAMIENTAS --- */
+.button-action {
+    -fx-background-color: white;
+    -fx-text-fill: #555;
+    -fx-border-color: #ddd;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+    -fx-padding: 6 12;
+}
+.button-action:hover {
+    -fx-background-color: #f0f0f0;
+    -fx-border-color: #bbb;
+}
+
+/* Botón Primario (Subir/Bajar) - Azul */
+.button-primary {
+    -fx-background-color: #007bff;
+    -fx-text-fill: white;
+    -fx-border-color: #0069d9;
+}
+.button-primary:hover {
+    -fx-background-color: #0069d9;
+}
+
+/* Botón Peligro (Borrar) - Rojo suave */
+.button-danger {
+    -fx-background-color: #fff;
+    -fx-text-fill: #dc3545;
+    -fx-border-color: #dc3545;
+}
+.button-danger:hover {
+    -fx-background-color: #dc3545;
+    -fx-text-fill: white;
+}
+
+/* Botones de Navegación (Flechas pequeñas) */
+.button-nav {
+    -fx-background-color: transparent;
+    -fx-padding: 4 8;
+    -fx-cursor: hand;
+}
+.button-nav:hover {
+    -fx-background-color: #e0e0e0;
+    -fx-background-radius: 3px;
+}
+
+/* --- CAMPOS DE DIRECCIÓN (ADDRESS BARS) --- */
+.address-field {
+    -fx-background-radius: 15px;
+    -fx-border-radius: 15px;
+    -fx-padding: 4 10;
+    -fx-background-color: #fff;
+    -fx-border-color: #ccc;
+}
+.address-field:focused {
+    -fx-border-color: #007bff;
+}
+
+/* --- BARRA DE PROGRESO --- */
+.progress-bar .track {
+    -fx-background-color: #e9ecef;
+    -fx-background-radius: 4px;
+}
+.progress-bar .bar {
+    -fx-background-color: #28a745; /* Verde éxito */
+    -fx-background-radius: 4px;
+    -fx-background-insets: 0;
+}
+
+/* ValidatorFX */
+.error {
+    -fx-border-color: red;
+    -fx-background-color: #fff0f0;
+}
+
+/* --- ESTILO DE TABLAS MODERNAS --- */
+
+.table-view {
+    -fx-background-color: transparent; /* Fondo transparente */
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 4px;
+}
+
+/* Encabezados de columna */
+.table-view .column-header-background {
+    -fx-background-color: #f8f9fa; /* Gris muy claro */
+    -fx-border-color: transparent transparent #e0e0e0 transparent;
+    -fx-pref-height: 35px;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #555;
+}
+
+.table-view .column-header .label {
+    -fx-alignment: CENTER-LEFT; /* Alinea el texto del título a la izquierda */
+    -fx-padding: 0 0 0 10;      /* Un poco de margen para que no pegue al borde */
+}
+
+.table-view .column-header.numeric-column .label {
+    -fx-alignment: CENTER-RIGHT;
+    -fx-padding: 0 10 0 0;
+}
+
+/* Celdas */
+.table-cell {
+    -fx-alignment: CENTER-LEFT; /* Texto alineado a la izquierda */
+    -fx-padding: 0 10 0 10;
+    -fx-font-size: 13px;
+    -fx-text-fill: #333;
+    -fx-border-color: transparent; /* Sin líneas verticales feas */
+}
+
+/* Filas */
+.table-row-cell {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #f0f0f0 transparent; /* Línea sutil abajo */
+}
+
+/* Filas impares (efecto cebra sutil, opcional) */
+.table-row-cell:odd {
+    -fx-background-color: #fafafa;
+}
+
+/* Selección (El azul corporativo) */
+.table-view:focused .table-row-cell:filled:selected {
+    -fx-background-color: #e3f2fd; /* Azul muy clarito de fondo */
+    -fx-background-insets: 0;
+}
+
+.table-view:focused .table-row-cell:filled:selected .table-cell {
+    -fx-text-fill: #007bff; /* Texto azul fuerte */
+    -fx-font-weight: bold;
+}
+
+/* Scrollbars modernos (más delgados) */
+.table-view .scroll-bar:vertical,
+.table-view .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+.table-view .scroll-bar:vertical .thumb,
+.table-view .scroll-bar:horizontal .thumb {
+    -fx-background-color: #cccccc;
+    -fx-background-radius: 5em;
+}
+
+/* --- BARRA DE HERRAMIENTAS --- */
+.tool-bar {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #e0e0e0 transparent;
+    -fx-padding: 10px;
+}
