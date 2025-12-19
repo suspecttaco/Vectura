@@ -1,17 +1,26 @@
 package com.vectura.client.controller;
 
 import com.vectura.client.model.LocalVecturaFile;
+import com.vectura.client.model.TransferTask;
 import com.vectura.client.model.VecturaFile;
 import com.vectura.client.service.SftpService;
+import com.vectura.client.service.TransferManager;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+
+import net.schmizz.sshj.common.StreamCopier;
+import net.schmizz.sshj.xfer.TransferListener;
+
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -19,40 +28,63 @@ import java.util.List;
 public class DashboardController {
 
     // Local
-    @FXML private TextField localPathField;
-    @FXML private TableView<VecturaFile> localTable;
-    @FXML private TableColumn<VecturaFile, String> localNameCol;
-    @FXML private TableColumn<VecturaFile, String> localSizeCol;
-    @FXML private TableColumn<VecturaFile, String> localDateCol;
+    @FXML
+    private TextField localPathField;
+    @FXML
+    private TableView<VecturaFile> localTable;
+    @FXML
+    private TableColumn<VecturaFile, String> localNameCol;
+    @FXML
+    private TableColumn<VecturaFile, String> localSizeCol;
+    @FXML
+    private TableColumn<VecturaFile, String> localDateCol;
 
     // Remoto
-    @FXML private TextField remotePathField;
-    @FXML private TableView<VecturaFile> remoteTable;
-    @FXML private TableColumn<VecturaFile, String> remoteNameCol;
-    @FXML private TableColumn<VecturaFile, String> remoteSizeCol;
-    @FXML private TableColumn<VecturaFile, String> remoteDateCol;
+    @FXML
+    private TextField remotePathField;
+    @FXML
+    private TableView<VecturaFile> remoteTable;
+    @FXML
+    private TableColumn<VecturaFile, String> remoteNameCol;
+    @FXML
+    private TableColumn<VecturaFile, String> remoteSizeCol;
+    @FXML
+    private TableColumn<VecturaFile, String> remoteDateCol;
 
     // Cola de transferencias
-    @FXML private TableView<?> queueTable;
-    @FXML private TableColumn<?, ?> queueNameCol;
-    @FXML private TableColumn<?, ?> queueTypeCol; // Subida o Bajada
-    @FXML private TableColumn<?, ?> queueStatusCol; // Pendiente, En Progreso...
-    @FXML private TableColumn<?, ?> queueProgressCol;
+    @FXML
+    private TableView<TransferTask> queueTable;
+    @FXML
+    private TableColumn<TransferTask, String> queueNameCol;
+    @FXML
+    private TableColumn<TransferTask, String> queueSizeCol;
+    @FXML
+    private TableColumn<TransferTask, String> queueTypeCol; // Subida o Bajada
+    @FXML
+    private TableColumn<TransferTask, String> queueStatusCol; // Pendiente, En Progreso...
+    @FXML
+    private TableColumn<TransferTask, Double> queueProgressCol;
 
     // General
-    @FXML private Label statusLabel;
-    @FXML private ProgressBar progressBar;
+    @FXML
+    private Label statusLabel;
+    @FXML
+    private ProgressBar progressBar;
 
     private SftpService sftpService;
+    private TransferManager transferManager;
+
     private String currentLocalPath = System.getProperty("user.home");
     private String currentRemotePath = "/";
 
-    public void initData(SftpService service) {
+    public void initData(SftpService service) throws IOException {
         this.sftpService = service;
+        this.transferManager = this.sftpService.getTransferManager();
         statusLabel.setText("Conectado a Vectura Server v1.0");
 
         setupTables();
-        setupContextMenus(); // <--- NUEVO: Clic derecho
+        setupQueueTable();
+        setupContextMenus(); // Clic derecho
         refreshBoth();
     }
 
@@ -60,7 +92,7 @@ public class DashboardController {
         setupColumns(localNameCol, localSizeCol, localDateCol);
         setupColumns(remoteNameCol, remoteSizeCol, remoteDateCol);
 
-        // Hacer que al dar Enter en la barra de dirección, navegue
+        // Enter para ir a direccion
         localPathField.setOnAction(e -> {
             currentLocalPath = localPathField.getText();
             loadLocalFiles();
@@ -71,52 +103,152 @@ public class DashboardController {
         setupDoubleClickHandler(remoteTable, false);
     }
 
-    // Configura el doble clic para navegar
+    private void setupQueueTable() {
+        // Vincular columnas
+        queueNameCol.setCellValueFactory(cell -> cell.getValue().fileNameProperty());
+        queueTypeCol.setCellValueFactory(cell -> cell.getValue().typeProperty());
+        queueStatusCol.setCellValueFactory(cell -> cell.getValue().statusProperty());
+        queueSizeCol.setCellValueFactory(cell -> cell.getValue().sizeProperty());
+        queueSizeCol.getStyleClass().add("numeric-column");
+
+        // Columna de progreso
+        queueProgressCol.setCellValueFactory(cell -> cell.getValue().progressProperty().asObject());
+
+        // Renderizar ProgressBar en celda
+        queueProgressCol.setCellFactory(column -> new TableCell<TransferTask, Double>() {
+            private final ProgressBar progressBar = new ProgressBar();
+            private final Label progressLabel = new Label();
+            private final StackPane stackPane = new StackPane();
+
+            {
+                // Configuración inicial
+                progressBar.setMaxWidth(Double.MAX_VALUE);
+                progressBar.setPrefHeight(20);
+
+                // Estilo del texto
+                progressLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #333; -fx-font-size: 11px;");
+
+                // Apilamos: Barra abajo, Texto arriba
+                stackPane.getChildren().addAll(progressBar, progressLabel);
+            }
+
+            @Override
+            protected void updateItem(Double progress, boolean empty) {
+                super.updateItem(progress, empty);
+
+                if (empty || progress == null) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    progressBar.setProgress(progress);
+
+                    if (progress < 0) {
+                        progressLabel.setText("Calculando...");
+                    } else {
+                        progressLabel.setText(String.format("%.0f%%", progress * 100));
+                    }
+
+                    if (progress >= 1.0) {
+                        progressBar.setStyle("-fx-accent: #28a745;"); // Verde éxito
+                        progressLabel.setText("Completado");
+                        progressLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-effect: dropshadow(one-pass-box, black, 2, 0, 0, 0);");
+                    } else {
+                        progressBar.setStyle("-fx-accent: #007bff;"); // Azul normal
+                        progressLabel.setStyle("-fx-text-fill: #333; -fx-font-weight: bold;");
+                    }
+
+                    setGraphic(stackPane);
+                }
+            }
+        });
+    }
+
+    // Doble clic (Navegar o Transferir)
     private void setupDoubleClickHandler(TableView<VecturaFile> table, boolean isLocal) {
+
         table.setRowFactory(tv -> {
             TableRow<VecturaFile> row = new TableRow<>();
+
             row.setOnMouseClicked(event -> {
+                // Solo en fila con datos
                 if (event.getClickCount() == 2 && (!row.isEmpty())) {
                     VecturaFile rowData = row.getItem();
+
                     if (rowData.isDirectory()) {
+                        // Carpeta -> Navegar
                         if (isLocal) {
                             currentLocalPath = rowData.getPath();
                             loadLocalFiles();
                         } else {
-                            // Concatenación simple por ahora, luego usaremos Path
                             if (currentRemotePath.endsWith("/")) currentRemotePath += rowData.getName();
                             else currentRemotePath += "/" + rowData.getName();
                             loadRemoteFiles();
                         }
+                    } else {
+                        // Archivo -> Transferir
+                        if (isLocal) {
+                            // Local = SUBIR
+                            handleUpload();
+                        } else {
+                            // Remoto = BAJAR
+                            handleDownload();
+                        }
                     }
                 }
             });
-            return row ;
+            return row;
         });
     }
 
     private void setupContextMenus() {
-        // Creamos un menú para clic derecho
-        ContextMenu contextMenu = new ContextMenu();
-        MenuItem uploadItem = new MenuItem("Subir / Bajar");
-        MenuItem deleteItem = new MenuItem("Eliminar");
-        MenuItem renameItem = new MenuItem("Renombrar");
+        // Local
+        ContextMenu localMenu = new ContextMenu();
 
-        uploadItem.setOnAction(e -> handleTransferAction());
-        deleteItem.setOnAction(e -> handleDelete());
-        renameItem.setOnAction(e -> System.out.println("TODO: Renombrar"));
+        // Subir
+        MenuItem uploadItem = new MenuItem("Subir al Servidor");
+        uploadItem.setOnAction(e -> handleUpload());
+        uploadItem.setGraphic(new FontIcon("fas-cloud-upload-alt"));
 
-        contextMenu.getItems().addAll(uploadItem, new SeparatorMenuItem(), renameItem, deleteItem);
+        // Actualizar
+        MenuItem refreshItemL = new MenuItem("Actualizar");
+        refreshItemL.setOnAction(e -> loadLocalFiles());
 
-        // Asignamos el mismo menu a ambas tablas
-        localTable.setContextMenu(contextMenu);
-        remoteTable.setContextMenu(contextMenu);
-    }
+        // Nueva carpeta local
+        MenuItem mkdirItemL = new MenuItem("Nueva Carpeta");
+        mkdirItemL.setOnAction(e -> handleMkdir(true)); // true = local
 
-    // Metodo auxiliar para decidir si subimos o bajamos según qué tabla tenga foco
-    private void handleTransferAction() {
-        if (localTable.isFocused()) handleUpload();
-        else if (remoteTable.isFocused()) handleDownload();
+        // Eliminar
+        MenuItem deleteItemL = new MenuItem("Eliminar");
+        deleteItemL.setOnAction(e -> handleDelete(true)); // true = local
+        deleteItemL.setStyle("-fx-text-fill: red;");
+
+        localMenu.getItems().addAll(uploadItem, new SeparatorMenuItem(), mkdirItemL, refreshItemL, new SeparatorMenuItem(), deleteItemL);
+        localTable.setContextMenu(localMenu);
+
+
+        // Remoto
+        ContextMenu remoteMenu = new ContextMenu();
+
+        // Descargar
+        MenuItem downloadItem = new MenuItem("Descargar a mi PC");
+        downloadItem.setOnAction(e -> handleDownload()); // Implementaremos esto abajo
+        downloadItem.setGraphic(new FontIcon("fas-cloud-download-alt"));
+
+        //Actualizar
+        MenuItem refreshItemR = new MenuItem("Actualizar");
+        refreshItemR.setOnAction(e -> loadRemoteFiles());
+
+        // Nueva carpeta
+        MenuItem mkdirItemR = new MenuItem("Nueva Carpeta");
+        mkdirItemR.setOnAction(e -> handleMkdir(false)); // false = remoto
+
+        // Eliminar
+        MenuItem deleteItemR = new MenuItem("Eliminar");
+        deleteItemR.setOnAction(e -> handleDelete(false)); // false = remoto
+        deleteItemR.setStyle("-fx-text-fill: red;");
+
+        remoteMenu.getItems().addAll(downloadItem, new SeparatorMenuItem(), mkdirItemR, refreshItemR, new SeparatorMenuItem(), deleteItemR);
+        remoteTable.setContextMenu(remoteMenu);
     }
 
     private void setupColumns(TableColumn<VecturaFile, String> nameCol,
@@ -205,47 +337,269 @@ public class DashboardController {
         }
     }
 
-    // --- BOTONES ---
-
-    @FXML public void handleUpload() {
+    @FXML
+    public void handleUpload() {
         VecturaFile selected = localTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            System.out.println("TODO: Subir " + selected.getName());
-            // Simulamos progreso
-            progressBar.setVisible(true);
-            progressBar.setProgress(-1); // Indeterminado
-        } else {
-            statusLabel.setText("Selecciona un archivo local para subir.");
+        if (selected == null) {
+            statusLabel.setText("Selecciona un archivo local.");
+            return;
         }
+
+        TransferTask rowItem = new TransferTask(selected.getName(), "Subida", selected.getSize());
+        queueTable.getItems().add(rowItem);
+
+        javafx.concurrent.Task<Void> backgroundWorker = new javafx.concurrent.Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                updateMessage("Iniciando...");
+
+                File localFile = new File(selected.getPath());
+                String remoteDest = currentRemotePath.endsWith("/") ?
+                        currentRemotePath + selected.getName() :
+                        currentRemotePath + "/" + selected.getName();
+
+                // Sensor de progreso
+                TransferListener progressSensor = new TransferListener() {
+
+                    // Devolver 'this' para seguir usando este mismo listener dentro de las carpetas.
+                    @Override
+                    public TransferListener directory(String name) {
+                        updateMessage("Entrando a carpeta: " + name);
+                        return this;
+                    }
+
+                    // Devolver Listener
+                    @Override
+                    public StreamCopier.Listener file(String name, long size) {
+                        updateMessage("Subiendo archivo: " + name);
+
+                        // Devolver el listener que cuenta los bytes
+                        return new StreamCopier.Listener() {
+                            @Override
+                            public void reportProgress(long transferred) {
+                                long total = selected.getSize();
+                                // Evitar division por cero
+                                if (total <= 0) total = 1;
+
+                                updateProgress(transferred, total);
+
+                                String statusText = String.format("Subiendo... %s / %s",
+                                        humanReadableByteCountSI(transferred),
+                                        humanReadableByteCountSI(total));
+                                updateMessage(statusText);
+                            }
+                        };
+                    }
+                };
+
+                transferManager.upload(localFile, remoteDest, progressSensor);
+                return null;
+            }
+        };
+
+        // Bindings
+        rowItem.progressProperty().bind(backgroundWorker.progressProperty());
+        backgroundWorker.messageProperty().addListener((obs, old, msg) -> rowItem.setStatus(msg));
+
+        backgroundWorker.setOnSucceeded(e -> {
+            rowItem.progressProperty().unbind();
+            rowItem.setProgress(1.0);
+            rowItem.setStatus("Completado");
+            refreshBoth();
+            statusLabel.setText("Subida exitosa: " + selected.getName());
+        });
+
+        backgroundWorker.setOnFailed(e -> {
+            rowItem.progressProperty().unbind();
+            rowItem.setProgress(0.0);
+            rowItem.setStatus("Error: " + backgroundWorker.getException().getMessage());
+            backgroundWorker.getException().printStackTrace();
+        });
+
+        new Thread(backgroundWorker).start();
     }
 
-    @FXML public void handleDownload() {
+    @FXML
+    public void handleDownload() {
         VecturaFile selected = remoteTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            System.out.println("TODO: Bajar " + selected.getName());
-        } else {
-            statusLabel.setText("Selecciona un archivo remoto para bajar.");
+        if (selected == null) {
+            statusLabel.setText("Selecciona un archivo remoto.");
+            return;
         }
+
+        TransferTask rowItem = new TransferTask(selected.getName(), "Bajada", selected.getSize());
+        queueTable.getItems().add(rowItem);
+
+        javafx.concurrent.Task<Void> backgroundWorker = new javafx.concurrent.Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                updateMessage("Iniciando conexión...");
+
+                String remotePath = currentRemotePath.endsWith("/") ?
+                        currentRemotePath + selected.getName() :
+                        currentRemotePath + "/" + selected.getName();
+
+                File localDestFolder = new File(currentLocalPath);
+
+                // Sensor de progreso
+                TransferListener progressSensor = new TransferListener() {
+
+                    // Retorna 'this'
+                    @Override
+                    public TransferListener directory(String name) {
+                        updateMessage("Creando carpeta local: " + name);
+                        return this;
+                    }
+
+                    // Retorna un nuevo StreamCopier.Listener
+                    @Override
+                    public StreamCopier.Listener file(String name, long size) {
+                        updateMessage("Bajando archivo: " + name);
+
+                        return new StreamCopier.Listener() {
+                            @Override
+                            public void reportProgress(long transferred) {
+                                long total = selected.getSize();
+                                if (total <= 0) total = 1;
+
+                                updateProgress(transferred, total);
+
+                                String statusText = String.format("Bajando... %s / %s",
+                                        humanReadableByteCountSI(transferred),
+                                        humanReadableByteCountSI(total));
+                                updateMessage(statusText);
+                            }
+                        };
+                    }
+                };
+
+                transferManager.download(remotePath, localDestFolder, progressSensor);
+                return null;
+            }
+        };
+
+        // Bindings
+        rowItem.progressProperty().bind(backgroundWorker.progressProperty());
+        backgroundWorker.messageProperty().addListener((obs, old, msg) -> rowItem.setStatus(msg));
+
+        backgroundWorker.setOnSucceeded(e -> {
+            rowItem.progressProperty().unbind();
+            rowItem.setProgress(1.0);
+            rowItem.setStatus("Completado");
+            refreshBoth();
+            statusLabel.setText("Descarga exitosa: " + selected.getName());
+        });
+
+        backgroundWorker.setOnFailed(e -> {
+            rowItem.progressProperty().unbind();
+            rowItem.setProgress(0.0);
+            rowItem.setStatus("Error: " + backgroundWorker.getException().getMessage());
+            backgroundWorker.getException().printStackTrace();
+        });
+
+        new Thread(backgroundWorker).start();
     }
 
-    @FXML public void handleDelete() {
-        System.out.println("TODO: Borrar archivo seleccionado");
+    private void handleDelete(boolean isLocal) {
+        // Identificar que borrar
+        VecturaFile selected = isLocal ? localTable.getSelectionModel().getSelectedItem()
+                : remoteTable.getSelectionModel().getSelectedItem();
+
+        if (selected == null) {
+            statusLabel.setText("Selecciona algo para eliminar.");
+            return;
+        }
+
+        // Confirmacion
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmar Eliminación");
+        alert.setHeaderText("¿Eliminar permanentemente '" + selected.getName() + "'?");
+        alert.setContentText("Si es una carpeta, se borrará TODO su contenido. Esta acción no se puede deshacer.");
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+
+                statusLabel.setText("🗑️ Eliminando...");
+
+                // Ejecutar en segundo plano
+                new Thread(() -> {
+                    try {
+                        if (isLocal) {
+                            // Borrado Local Recursivo
+                            transferManager.deleteLocal(new File(selected.getPath()));
+                        } else {
+                            // Borrado Remoto Recursivo
+                            String remotePath = currentRemotePath.endsWith("/") ?
+                                    currentRemotePath + selected.getName() :
+                                    currentRemotePath + "/" + selected.getName();
+
+                            transferManager.deleteRemote(remotePath);
+                        }
+
+                        // Actualizar UI al terminar
+                        javafx.application.Platform.runLater(() -> {
+                            refreshBoth();
+                            statusLabel.setText("Eliminado: " + selected.getName());
+                        });
+
+                    } catch (Exception e) {
+                        javafx.application.Platform.runLater(() -> {
+                            statusLabel.setText("Error al eliminar: " + e.getMessage());
+                            e.printStackTrace();
+
+                            // Mostrar alerta de error detallada
+                            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                            errorAlert.setTitle("Error");
+                            errorAlert.setHeaderText("No se pudo eliminar");
+                            errorAlert.setContentText(e.getMessage());
+                            errorAlert.show();
+                        });
+                    }
+                }).start();
+            }
+        });
     }
 
-    @FXML public void handleMkdir() {
-        System.out.println("TODO: Crear carpeta");
+    private void handleMkdir(boolean isLocal) {
+        // Dialogo para carpeta
+        TextInputDialog dialog = new TextInputDialog("Nueva Carpeta");
+        dialog.setTitle("Crear Carpeta");
+        dialog.setHeaderText(isLocal ? "Crear carpeta en MI PC" : "Crear carpeta en SERVIDOR");
+        dialog.setContentText("Nombre:");
+
+        dialog.showAndWait().ifPresent(name -> {
+            if (name.trim().isEmpty()) return;
+
+            try {
+                if (isLocal) {
+                    // Logica Local
+                    File newDir = new File(currentLocalPath, name);
+                    if (!newDir.mkdir()) throw new IOException("No se pudo crear la carpeta");
+                } else {
+                    // Logica Remota (SSHJ)
+                    String path = currentRemotePath.endsWith("/") ? currentRemotePath + name : currentRemotePath + "/" + name;
+                    sftpService.getSftpClient().mkdir(path);
+                }
+                refreshBoth();
+                statusLabel.setText("Carpeta creada: " + name);
+            } catch (Exception e) {
+                statusLabel.setText("Error: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
     }
 
-    @FXML public void handleDisconnect() {
+    @FXML
+    public void handleDisconnect() {
         sftpService.disconnect();
         // Cerrar ventana actual
         ((Stage) statusLabel.getScene().getWindow()).close();
         System.out.println("Desconectado.");
     }
 
-    // --- NAVEGACIÓN ---
-
-    @FXML public void goLocalUp() {
+    // Navegacion
+    @FXML
+    public void goLocalUp() {
         File parent = new File(currentLocalPath).getParentFile();
         if (parent != null) {
             currentLocalPath = parent.getAbsolutePath();
@@ -253,12 +607,14 @@ public class DashboardController {
         }
     }
 
-    @FXML public void goLocalHome() {
+    @FXML
+    public void goLocalHome() {
         currentLocalPath = System.getProperty("user.home");
         loadLocalFiles();
     }
 
-    @FXML public void goRemoteUp() {
+    @FXML
+    public void goRemoteUp() {
         if (!currentRemotePath.equals("/")) {
             int lastSlash = currentRemotePath.lastIndexOf('/');
             if (lastSlash > 0) currentRemotePath = currentRemotePath.substring(0, lastSlash);
@@ -267,7 +623,8 @@ public class DashboardController {
         }
     }
 
-    @FXML public void goRemoteHome() {
+    @FXML
+    public void goRemoteHome() {
         currentRemotePath = "/";
         loadRemoteFiles();
     }

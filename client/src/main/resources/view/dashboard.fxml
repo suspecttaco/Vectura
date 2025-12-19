@@ -23,13 +23,13 @@
 
                 <Separator orientation="VERTICAL" />
 
-                <Button onAction="#handleMkdir" styleClass="button-action" text="Nueva Carpeta">
+                <Button styleClass="button-action" text="Nueva Carpeta">
                     <graphic><FontIcon iconColor="#555" iconLiteral="fas-folder-plus" /></graphic>
                 </Button>
                 <Button onAction="#refreshBoth" styleClass="button-action" text="Actualizar">
                     <graphic><FontIcon iconColor="#555" iconLiteral="fas-sync-alt" /></graphic>
                 </Button>
-                <Button onAction="#handleDelete" styleClass="button-danger" text="Borrar">
+                <Button  styleClass="button-danger" text="Borrar">
                     <graphic><FontIcon iconColor="#dc3545" iconLiteral="fas-trash-alt" /></graphic>
                 </Button>
 
@@ -108,18 +108,32 @@
                 <Label style="-fx-font-weight: bold; -fx-text-fill: #555;" text="Cola de Transferencias" />
 
                 <TableView fx:id="queueTable" VBox.vgrow="ALWAYS">
+
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                    </columnResizePolicy>
+
                     <columns>
-                        <TableColumn fx:id="queueNameCol" prefWidth="300" text="Archivo" />
-                        <TableColumn fx:id="queueTypeCol" prefWidth="100" text="Dirección" />
-                        <TableColumn fx:id="queueStatusCol" prefWidth="150" text="Estado" />
-                        <TableColumn fx:id="queueProgressCol" prefWidth="200" text="Progreso" />
+                        <TableColumn fx:id="queueNameCol" text="Archivo" minWidth="200"/>
+
+                        <TableColumn fx:id="queueSizeCol" text="Tamaño"
+                                     prefWidth="90" maxWidth="90" minWidth="90"
+                                     style="-fx-alignment: CENTER-RIGHT;"/>
+
+                        <TableColumn fx:id="queueTypeCol" text="Dirección"
+                                     prefWidth="90" maxWidth="90" minWidth="90"
+                                     style="-fx-alignment: CENTER;"/>
+
+                        <TableColumn fx:id="queueStatusCol" text="Estado" minWidth="150"/>
+
+                        <TableColumn fx:id="queueProgressCol" text="Progreso"
+                                     prefWidth="140" maxWidth="140" minWidth="140"/>
                     </columns>
+
                     <placeholder>
-                        <Label text="No hay transferencias activas" textFill="#999" />
+                        <Label text="No hay transferencias activas" textFill="#999" style="-fx-font-size: 14px;"/>
                     </placeholder>
-               <columnResizePolicy>
-                  <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-               </columnResizePolicy>
+
                 </TableView>
             </VBox>
 

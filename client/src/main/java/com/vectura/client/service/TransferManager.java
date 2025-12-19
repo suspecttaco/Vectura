@@ -10,7 +10,10 @@ import net.schmizz.sshj.sftp.Response;
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.List;
 
+import net.schmizz.sshj.xfer.FileSystemFile;
+import net.schmizz.sshj.xfer.TransferListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,81 +26,60 @@ public class TransferManager {
     }
 
     // Subida
-    public void upload(File localItem, String remotePath) throws IOException {
+    public void upload(File localItem, String remotePath, TransferListener listener) throws IOException {
         LOG.info("Uploading: {} -> {}", localItem.getName(), remotePath);
 
-        if (localItem.isDirectory()) {
-            uploadFolder(localItem, remotePath);
-        } else {
-            uploadFile(localItem, remotePath);
-        }
-    }
+        sftpClient.getFileTransfer().setTransferListener(listener);
 
-    // Subida de carpetas
-    private void uploadFolder(File localFolder, String remoteParentPath) throws IOException {
-        String newRemotePath = remoteParentPath + "/" + localFolder.getName();
-
-        // Crear remoto si no existe
-        try {
-            sftpClient.stat(newRemotePath);
-        } catch (SFTPException e) {
-
-            if (e.getStatusCode() == Response.StatusCode.NO_SUCH_FILE) {
-                sftpClient.mkdir(newRemotePath);
-            } else {
-                throw e;
-            }
-        }
-
-        // Subir recursivo
-        File[] children = localFolder.listFiles();
-        if (children != null) {
-            for (File child : children) {
-                upload(child, newRemotePath);
-            }
-        }
-    }
-
-    // Subida de archivos
-    private void uploadFile(File localFile, String remotePath) throws IOException {
-        sftpClient.put(localFile.getAbsolutePath(), remotePath);
+        sftpClient.getFileTransfer().upload(new FileSystemFile(localItem), remotePath);
     }
 
     // Bajada
-    public void download(String remotePath, File localDestFolder) throws IOException {
-        // Obtener informacion del archivo remoto
-        FileAttributes attributes = sftpClient.stat(remotePath);
-        String name = new File(remotePath).getName();
-        File newLocalItem = new File(localDestFolder, name);
+    public void download(String remotePath, File localDestFolder, TransferListener listener) throws IOException {
+        LOG.info("Downloading: {} -> {}", remotePath, localDestFolder.getAbsolutePath());
 
-        LOG.info("Downloading: {} -> {}", remotePath, newLocalItem.getAbsolutePath());
+        sftpClient.getFileTransfer().setTransferListener(listener);
 
-        if (attributes.getMode().getType() == FileMode.Type.DIRECTORY) {
-            downloadFolder(remotePath, newLocalItem);
+        sftpClient.getFileTransfer().download(remotePath, new FileSystemFile(localDestFolder));
+    }
+
+    // Borrar remoto
+    public void deleteRemote(String path) throws IOException {
+        // Obtener atributos
+        if (sftpClient.stat(path).getType() == FileMode.Type.DIRECTORY) {
+
+            // Listar contenido
+            List<RemoteResourceInfo> children = sftpClient.ls(path);
+
+            for (RemoteResourceInfo child : children) {
+                // Saltar "." y ".."
+                if (child.getName().equals(".") || child.getName().equals("..")) continue;
+
+                // Recursividad para borrar hijo
+                deleteRemote(child.getPath());
+            }
+            // Borrar carpeta una vez este vacia
+            sftpClient.rmdir(path);
         } else {
-            downloadFile(remotePath, newLocalItem);
+            // Si es archivo borrar directo
+            sftpClient.rm(path);
         }
     }
 
-    private void downloadFolder(String remotePath, File localFolder) throws IOException {
-        // Crear carpeta local si no existe
-        if (!localFolder.exists()) {
-            if (!localFolder.mkdirs()) {
-                throw new IOException("Can't create local directory: " + localFolder.getAbsolutePath());
+    public void deleteLocal(File file) throws IOException {
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+
+            if (children != null) {
+                for (File child : children) {
+                    deleteLocal(child);
+                }
             }
         }
 
-        // Listar contenido remoto y bajar recursivamente
-        for (RemoteResourceInfo remoteChild : sftpClient.ls(remotePath)) {
-            // Saltar . y ..
-            if (remoteChild.getName().equals(".") || remoteChild.getName().equals("..")) continue;
-
-            // Recursividad
-            download(remoteChild.getPath(), localFolder);
+        // Borrar archivo o carpeta vacia
+        if (!file.delete()) {
+            throw new IOException("No se pudo borrar: " + file.getAbsolutePath());
         }
-    }
-
-    private void downloadFile(String remotePath, File localFile) throws IOException {
-        sftpClient.get(remotePath, localFile.getAbsolutePath());
     }
 }

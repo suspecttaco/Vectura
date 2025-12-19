@@ -84,4 +84,8 @@ public class SftpService {
         ensureConnected();
         return new TransferManager(this.sftpClient);
     }
+
+    public SFTPClient getSftpClient() {
+        return this.sftpClient;
+    }
 }
