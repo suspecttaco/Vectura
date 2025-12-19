@@ -27,6 +27,13 @@ import java.util.List;
 
 public class DashboardController {
 
+    // Host
+    @FXML private TextField hostField;
+    @FXML private TextField userField;
+    @FXML private PasswordField passwordField;
+    @FXML private TextField portField;
+    @FXML private Button btnConnect;
+
     // Local
     @FXML
     private TextField localPathField;
@@ -68,8 +75,8 @@ public class DashboardController {
     // General
     @FXML
     private Label statusLabel;
-    @FXML
-    private ProgressBar progressBar;
+
+    private boolean isConnected = false;
 
     private SftpService sftpService;
     private TransferManager transferManager;
@@ -77,15 +84,20 @@ public class DashboardController {
     private String currentLocalPath = System.getProperty("user.home");
     private String currentRemotePath = "/";
 
-    public void initData(SftpService service) throws IOException {
-        this.sftpService = service;
-        this.transferManager = this.sftpService.getTransferManager();
-        statusLabel.setText("Conectado a Vectura Server v1.0");
 
+
+    @FXML
+    public void initialize() {
         setupTables();
+        // Deshabilitar tablas para que no se puedan tocar
+        localTable.setDisable(true);
+        remoteTable.setDisable(true);
+        localTable.setPlaceholder(new Label("Conéctate para ver archivos locales"));
+        remoteTable.setPlaceholder(new Label("Conéctate para ver archivos remotos"));
+
         setupQueueTable();
         setupContextMenus(); // Clic derecho
-        refreshBoth();
+        updateConnectionState(false);
     }
 
     private void setupTables() {
@@ -637,5 +649,151 @@ public class DashboardController {
             ci.next();
         }
         return String.format("%.1f %cB", bytes / 1000.0, ci.current());
+    }
+
+    private void doConnect() {
+        // Leer datos de la UI
+        String host = hostField.getText().trim();
+        String user = userField.getText().trim();
+        String pass = passwordField.getText().trim();
+        String portStr = portField.getText().trim();
+
+        // Validaciones básicas
+        if (host.isEmpty() || user.isEmpty() || pass.isEmpty()) {
+            statusLabel.setText("Por favor llena todos los campos.");
+            return;
+        }
+
+        int port = 22;
+        try {
+            port = Integer.parseInt(portStr);
+        } catch (NumberFormatException e) {
+            statusLabel.setText("El puerto debe ser un número.");
+            return;
+        }
+
+        // Bloqueo visual
+        btnConnect.setDisable(true);
+        statusLabel.setText("Conectando a " + host + "...");
+
+        final int finalPort = port;
+
+        // Tarea en segundo plano
+        javafx.concurrent.Task<Void> connectTask = new javafx.concurrent.Task<>() {
+            @Override
+            protected Void call() throws Exception {
+
+                sftpService = new SftpService();
+                sftpService.connect(host, finalPort, user, pass);
+
+                transferManager = sftpService.getTransferManager();
+
+                currentRemotePath = sftpService.getSftpClient().canonicalize(".");
+
+                return null;
+            }
+        };
+
+        // Manejo de resultados
+        connectTask.setOnSucceeded(e -> {
+            isConnected = true;
+            updateConnectionState(true);
+            statusLabel.setText("Conectado a " + host);
+
+            // Despertar las tablas
+            localTable.setDisable(false);
+            remoteTable.setDisable(false);
+
+            // Asegurar una ruta local definida (Home)
+            if (currentLocalPath == null || currentLocalPath.isEmpty()) {
+                currentLocalPath = System.getProperty("user.home");
+            }
+
+            // Carga ambas tablas
+            refreshBoth();
+
+            btnConnect.setDisable(false);
+        });
+
+        connectTask.setOnFailed(e -> {
+            isConnected = false;
+            updateConnectionState(false);
+            btnConnect.setDisable(false);
+
+            Throwable error = connectTask.getException();
+            statusLabel.setText("Error: " + error.getMessage());
+            error.printStackTrace();
+
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error de Conexión");
+            alert.setHeaderText("No se pudo conectar");
+            alert.setContentText(error.getMessage());
+            alert.show();
+        });
+
+        new Thread(connectTask).start();
+    }
+
+    private void doDisconnect() {
+        // Intentar cerrar la sesión SSH
+        if (sftpService != null) {
+            try {
+                sftpService.disconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Limpieza
+
+        // Borrar contenido visual
+        remoteTable.getItems().clear();
+        localTable.getItems().clear();
+        queueTable.getItems().clear();
+
+        // Volver a bloquear
+        remoteTable.setDisable(true);
+        localTable.setDisable(true);
+
+        // Resetear rutas
+        currentRemotePath = "";
+        currentLocalPath = "";
+
+        statusLabel.setText("Desconectado");
+        updateConnectionState(false);
+    }
+
+    @FXML
+    public void handleToggleConnect() {
+        if (isConnected) {
+            doDisconnect();
+        } else {
+            doConnect();
+        }
+    }
+
+    // Alternar boton
+    private void updateConnectionState(boolean connected) {
+        this.isConnected = connected; // Guardar el estado
+
+        // Bloquear campos
+        hostField.setDisable(connected);
+        userField.setDisable(connected);
+        passwordField.setDisable(connected);
+        portField.setDisable(connected);
+
+        // Transformar el botón
+        if (connected) {
+            // ESTADO: CONECTADO -> Botón Rojo de "Desconectar"
+            btnConnect.setText("Desconectar");
+            btnConnect.setStyle("-fx-background-color: #d9534f; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
+            btnConnect.setGraphic(new FontIcon("fas-times"));
+        } else {
+            // ESTADO: DESCONECTADO -> Botón Verde de "Conectar"
+            btnConnect.setText("Conexión Rápida");
+            btnConnect.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
+
+            btnConnect.setGraphic(new FontIcon("fas-plug"));
+        }
     }
 }

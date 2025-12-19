@@ -5,107 +5,148 @@
 <?import javafx.scene.layout.*?>
 <?import org.kordamp.ikonli.javafx.*?>
 
-<BorderPane prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vectura.client.controller.DashboardController">
+<BorderPane prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vectura.client.controller.DashboardController">
 
     <stylesheets>
-        <URL value="@../css/styles.css" />
+        <URL value="@../css/styles.css"/>
     </stylesheets>
 
     <top>
         <VBox>
-            <ToolBar prefHeight="50.0" style="-fx-background-color: white; -fx-spacing: 10;">
-                <Button onAction="#handleUpload" styleClass="button-primary" text="Subir">
-                    <graphic><FontIcon iconColor="white" iconLiteral="fas-cloud-upload-alt" /></graphic>
-                </Button>
-                <Button onAction="#handleDownload" styleClass="button-primary" text="Bajar">
-                    <graphic><FontIcon iconColor="white" iconLiteral="fas-cloud-download-alt" /></graphic>
+            <MenuBar>
+                <menus>
+                    <Menu text="Archivo">
+                        <items>
+                            <MenuItem text="Guardar conexión..."/>
+                            <SeparatorMenuItem/>
+                            <MenuItem text="Salir"/>
+                        </items>
+                    </Menu>
+                    <Menu text="Ver">
+                        <items>
+                            <MenuItem text="Limpiar Cola"/>
+                            <MenuItem text="Refrescar todo"/>
+                        </items>
+                    </Menu>
+                    <Menu text="Ayuda">
+                        <items>
+                            <MenuItem text="Acerca de..."/>
+                        </items>
+                    </Menu>
+                </menus>
+            </MenuBar>
+
+            <HBox spacing="10" alignment="CENTER_LEFT"
+                  style="-fx-padding: 10px; -fx-background-color: #f4f4f4; -fx-border-color: #cccccc; -fx-border-width: 0 0 1 0;">
+
+                <Label text="Host:" style="-fx-font-weight: bold;"/>
+                <TextField fx:id="hostField" promptText="192.168.1.X" HBox.hgrow="ALWAYS"/>
+
+                <Label text="Usuario:" style="-fx-font-weight: bold;"/>
+                <TextField fx:id="userField" promptText="root" prefWidth="120"/>
+
+                <Label text="Contraseña:" style="-fx-font-weight: bold;"/>
+                <PasswordField fx:id="passwordField" promptText="••••••" prefWidth="120"/>
+
+                <Label text="Puerto:" style="-fx-font-weight: bold;"/>
+                <TextField fx:id="portField" text="22" prefWidth="50" alignment="CENTER"/>
+
+                <Separator orientation="VERTICAL"/>
+
+                <Button fx:id="btnConnect" text="Conexión Rápida"
+                        onAction="#handleToggleConnect"
+                        style="-fx-base: #28a745; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;">
+                    <graphic>
+                        <org.kordamp.ikonli.javafx.FontIcon iconLiteral="fas-plug"/>
+                    </graphic>
                 </Button>
 
-                <Separator orientation="VERTICAL" />
-
-                <Button styleClass="button-action" text="Nueva Carpeta">
-                    <graphic><FontIcon iconColor="#555" iconLiteral="fas-folder-plus" /></graphic>
-                </Button>
-                <Button onAction="#refreshBoth" styleClass="button-action" text="Actualizar">
-                    <graphic><FontIcon iconColor="#555" iconLiteral="fas-sync-alt" /></graphic>
-                </Button>
-                <Button  styleClass="button-danger" text="Borrar">
-                    <graphic><FontIcon iconColor="#dc3545" iconLiteral="fas-trash-alt" /></graphic>
-                </Button>
-
-                <Region HBox.hgrow="ALWAYS" />
-
-                <Button onAction="#handleDisconnect" styleClass="button-action" text="Desconectar">
-                    <graphic><FontIcon iconColor="#555" iconLiteral="fas-sign-out-alt" /></graphic>
-                </Button>
-            </ToolBar>
+            </HBox>
         </VBox>
     </top>
 
     <center>
-        <SplitPane dividerPositions="0.7" orientation="VERTICAL" style="-fx-background-color: transparent; -fx-padding: 10;">
+        <SplitPane dividerPositions="0.7" orientation="VERTICAL"
+                   style="-fx-background-color: transparent; -fx-padding: 10;">
 
             <SplitPane dividerPositions="0.5" style="-fx-background-color: transparent;">
 
                 <VBox spacing="8" style="-fx-padding: 0 10 10 0;">
                     <HBox alignment="CENTER_LEFT" spacing="5">
-                        <Label styleClass="label-subtitle" text="Mi PC" />
-                        <Region HBox.hgrow="ALWAYS" />
+                        <Label styleClass="label-subtitle" text="Mi PC"/>
+                        <Region HBox.hgrow="ALWAYS"/>
                         <Button onAction="#goLocalHome" styleClass="button-nav">
-                            <tooltip><Tooltip text="Ir a Inicio" /></tooltip>
-                            <graphic><FontIcon iconColor="#666" iconLiteral="fas-home" /></graphic>
+                            <tooltip>
+                                <Tooltip text="Ir a Inicio"/>
+                            </tooltip>
+                            <graphic>
+                                <FontIcon iconColor="#666" iconLiteral="fas-home"/>
+                            </graphic>
                         </Button>
                         <Button onAction="#goLocalUp" styleClass="button-nav">
-                            <tooltip><Tooltip text="Subir Nivel" /></tooltip>
-                            <graphic><FontIcon iconColor="#666" iconLiteral="fas-arrow-up" /></graphic>
+                            <tooltip>
+                                <Tooltip text="Subir Nivel"/>
+                            </tooltip>
+                            <graphic>
+                                <FontIcon iconColor="#666" iconLiteral="fas-arrow-up"/>
+                            </graphic>
                         </Button>
                     </HBox>
 
-                    <TextField fx:id="localPathField" promptText="Ruta Local..." styleClass="address-field" />
+                    <TextField fx:id="localPathField" promptText="Ruta Local..." styleClass="address-field"/>
 
                     <TableView fx:id="localTable" VBox.vgrow="ALWAYS">
                         <columns>
-                            <TableColumn fx:id="localNameCol" prefWidth="220" text="Nombre" />
-                            <TableColumn fx:id="localSizeCol" prefWidth="90" text="Tamaño" />
-                            <TableColumn fx:id="localDateCol" prefWidth="130" text="Modificado" />
+                            <TableColumn fx:id="localNameCol" prefWidth="220" text="Nombre"/>
+                            <TableColumn fx:id="localSizeCol" prefWidth="90" text="Tamaño"/>
+                            <TableColumn fx:id="localDateCol" prefWidth="130" text="Modificado"/>
                         </columns>
-                  <columnResizePolicy>
-                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                  </columnResizePolicy>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                        </columnResizePolicy>
                     </TableView>
                 </VBox>
 
                 <VBox spacing="8" style="-fx-padding: 0 0 10 10;">
                     <HBox alignment="CENTER_LEFT" spacing="5">
-                        <Label styleClass="label-subtitle" text="Servidor Remoto" />
-                        <Region HBox.hgrow="ALWAYS" />
+                        <Label styleClass="label-subtitle" text="Servidor Remoto"/>
+                        <Region HBox.hgrow="ALWAYS"/>
                         <Button onAction="#goRemoteHome" styleClass="button-nav">
-                            <tooltip><Tooltip text="Ir a Raíz" /></tooltip>
-                            <graphic><FontIcon iconColor="#666" iconLiteral="fas-server" /></graphic>
+                            <tooltip>
+                                <Tooltip text="Ir a Raíz"/>
+                            </tooltip>
+                            <graphic>
+                                <FontIcon iconColor="#666" iconLiteral="fas-server"/>
+                            </graphic>
                         </Button>
                         <Button onAction="#goRemoteUp" styleClass="button-nav">
-                            <tooltip><Tooltip text="Subir Nivel" /></tooltip>
-                            <graphic><FontIcon iconColor="#666" iconLiteral="fas-arrow-up" /></graphic>
+                            <tooltip>
+                                <Tooltip text="Subir Nivel"/>
+                            </tooltip>
+                            <graphic>
+                                <FontIcon iconColor="#666" iconLiteral="fas-arrow-up"/>
+                            </graphic>
                         </Button>
                     </HBox>
 
-                    <TextField fx:id="remotePathField" promptText="Ruta Remota..." styleClass="address-field" />
+                    <TextField fx:id="remotePathField" promptText="Ruta Remota..." styleClass="address-field"/>
 
                     <TableView fx:id="remoteTable" VBox.vgrow="ALWAYS">
                         <columns>
-                            <TableColumn fx:id="remoteNameCol" prefWidth="220" text="Nombre" />
-                            <TableColumn fx:id="remoteSizeCol" prefWidth="90" text="Tamaño" />
-                            <TableColumn fx:id="remoteDateCol" prefWidth="130" text="Modificado" />
+                            <TableColumn fx:id="remoteNameCol" prefWidth="220" text="Nombre"/>
+                            <TableColumn fx:id="remoteSizeCol" prefWidth="90" text="Tamaño"/>
+                            <TableColumn fx:id="remoteDateCol" prefWidth="130" text="Modificado"/>
                         </columns>
-                  <columnResizePolicy>
-                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                  </columnResizePolicy>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                        </columnResizePolicy>
                     </TableView>
                 </VBox>
             </SplitPane>
 
             <VBox spacing="5" style="-fx-padding: 10 0 0 0;">
-                <Label style="-fx-font-weight: bold; -fx-text-fill: #555;" text="Cola de Transferencias" />
+                <Label style="-fx-font-weight: bold; -fx-text-fill: #555;" text="Cola de Transferencias"/>
 
                 <TableView fx:id="queueTable" VBox.vgrow="ALWAYS">
 
@@ -141,9 +182,10 @@
     </center>
 
     <bottom>
-        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 5 10 5 10; -fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0 transparent transparent transparent;">
-            <Label fx:id="statusLabel" maxWidth="Infinity" text="Listo" textFill="#666" HBox.hgrow="ALWAYS" />
-            <ProgressBar fx:id="progressBar" prefWidth="200" progress="0.0" visible="false" />
+        <HBox alignment="CENTER_LEFT" spacing="10"
+              style="-fx-padding: 5 10 5 10; -fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0 transparent transparent transparent;">
+            <Label fx:id="statusLabel" maxWidth="Infinity" text="Listo" textFill="#666" HBox.hgrow="ALWAYS"/>
+            <ProgressBar fx:id="progressBar" prefWidth="200" progress="0.0" visible="false"/>
         </HBox>
     </bottom>
 </BorderPane>
