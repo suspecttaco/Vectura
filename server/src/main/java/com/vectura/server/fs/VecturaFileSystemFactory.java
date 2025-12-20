@@ -19,7 +19,7 @@ public class VecturaFileSystemFactory implements FileSystemFactory {
     private static final Logger LOG = LoggerFactory.getLogger(VecturaFileSystemFactory.class);
 
     @Override
-    public Path getUserHomeDir(SessionContext sessionContext) throws IOException {
+    public Path getUserHomeDir(SessionContext sessionContext) {
         return null;
     }
 
