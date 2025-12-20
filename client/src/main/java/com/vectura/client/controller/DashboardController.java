@@ -6,6 +6,7 @@ import com.vectura.client.model.VecturaFile;
 import com.vectura.client.service.SftpService;
 import com.vectura.client.service.TransferManager;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -29,11 +30,16 @@ import java.util.prefs.Preferences;
 public class DashboardController {
 
     // Host
-    @FXML private TextField hostField;
-    @FXML private TextField userField;
-    @FXML private PasswordField passwordField;
-    @FXML private TextField portField;
-    @FXML private Button btnConnect;
+    @FXML
+    private TextField hostField;
+    @FXML
+    private TextField userField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private TextField portField;
+    @FXML
+    private Button btnConnect;
 
     // Local
     @FXML
@@ -76,16 +82,23 @@ public class DashboardController {
     // General
     @FXML
     private Label statusLabel;
+    @FXML
+    private MenuItem menuConnect;
 
     // Botones
     // Local
-    @FXML private Button btnLocalBrowse;
-    @FXML private Button btnLocalUp;
-    @FXML private Button btnLocalHome;
+    @FXML
+    private Button btnLocalBrowse;
+    @FXML
+    private Button btnLocalUp;
+    @FXML
+    private Button btnLocalHome;
 
     // Remoto
-    @FXML private Button btnRemoteUp;
-    @FXML private Button btnRemoteHome;
+    @FXML
+    private Button btnRemoteUp;
+    @FXML
+    private Button btnRemoteHome;
 
     private boolean isConnected = false;
 
@@ -97,6 +110,9 @@ public class DashboardController {
 
     private String currentRemotePath = "/";
     private String remoteBaseFolder = "/";
+
+    // Archivos ocultos
+    private boolean showHiddenFiles = false;
 
     // Preferencias
     private Preferences preferences = Preferences.userNodeForPackage(DashboardController.class);
@@ -340,6 +356,7 @@ public class DashboardController {
 
             if (files != null) {
                 List<VecturaFile> vFiles = java.util.Arrays.stream(files)
+                        .filter(f -> showHiddenFiles || !f.isHidden())
                         .map(f -> (VecturaFile) new LocalVecturaFile(f))
                         .sorted((a, b) -> {
                             if (a.isDirectory() && !b.isDirectory()) return -1;
@@ -358,6 +375,11 @@ public class DashboardController {
         try {
             remotePathField.setText(currentRemotePath); // Actualizar barra
             List<VecturaFile> files = sftpService.listDirectory(currentRemotePath);
+
+            // Filtro archivos ocultos
+            if (!showHiddenFiles) {
+                files.removeIf(f -> f.getName().startsWith("."));
+            }
 
             files.sort((a, b) -> {
                 if (a.isDirectory() && !b.isDirectory()) return -1;
@@ -407,19 +429,43 @@ public class DashboardController {
                     public StreamCopier.Listener file(String name, long size) {
                         updateMessage("Subiendo archivo: " + name);
 
-                        // Devolver el listener que cuenta los bytes
+                        // Listener con cálculo de velocidad
                         return new StreamCopier.Listener() {
+                            // Variables para recordar el estado anterior
+                            private long lastTime = System.currentTimeMillis();
+                            private long lastBytes = 0;
+                            private String speedStr = "Calculando...";
+
                             @Override
                             public void reportProgress(long transferred) {
                                 long total = selected.getSize();
-                                // Evitar division por cero
                                 if (total <= 0) total = 1;
+
+                                // 1. Control de tiempo (Throttling)
+                                long now = System.currentTimeMillis();
+                                long timeDiff = now - lastTime;
+
+                                // Actualizamos velocidad cada 500ms para que no parpadee
+                                if (timeDiff >= 500) {
+                                    long bytesDiff = transferred - lastBytes;
+
+                                    // Velocidad = bytes / segundos
+                                    double speedBps = (double) bytesDiff / timeDiff * 1000.0;
+                                    speedStr = humanReadableByteCountSI((long) speedBps) + "/s";
+
+                                    // Resetear contadores para el siguiente ciclo
+                                    lastTime = now;
+                                    lastBytes = transferred;
+                                }
 
                                 updateProgress(transferred, total);
 
-                                String statusText = String.format("Subiendo... %s / %s",
+                                // 2. Mensaje con velocidad
+                                String statusText = String.format("Subiendo... %s / %s (%s)",
                                         humanReadableByteCountSI(transferred),
-                                        humanReadableByteCountSI(total));
+                                        humanReadableByteCountSI(total),
+                                        speedStr); // <--- AQUÍ LA MAGIA
+
                                 updateMessage(statusText);
                             }
                         };
@@ -491,16 +537,38 @@ public class DashboardController {
                         updateMessage("Bajando archivo: " + name);
 
                         return new StreamCopier.Listener() {
+                            // Variables de estado
+                            private long lastTime = System.currentTimeMillis();
+                            private long lastBytes = 0;
+                            private String speedStr = "Calculando...";
+
                             @Override
                             public void reportProgress(long transferred) {
                                 long total = selected.getSize();
                                 if (total <= 0) total = 1;
 
+                                // 1. Cálculo de velocidad (cada 500ms)
+                                long now = System.currentTimeMillis();
+                                long timeDiff = now - lastTime;
+
+                                if (timeDiff >= 500) {
+                                    long bytesDiff = transferred - lastBytes;
+                                    double speedBps = (double) bytesDiff / timeDiff * 1000.0;
+
+                                    speedStr = humanReadableByteCountSI((long) speedBps) + "/s";
+
+                                    lastTime = now;
+                                    lastBytes = transferred;
+                                }
+
                                 updateProgress(transferred, total);
 
-                                String statusText = String.format("Bajando... %s / %s",
+                                // 2. Actualizar mensaje
+                                String statusText = String.format("Bajando... %s / %s (%s)",
                                         humanReadableByteCountSI(transferred),
-                                        humanReadableByteCountSI(total));
+                                        humanReadableByteCountSI(total),
+                                        speedStr);
+
                                 updateMessage(statusText);
                             }
                         };
@@ -792,6 +860,8 @@ public class DashboardController {
         // Resetear rutas
         currentRemotePath = "";
         currentLocalPath = "";
+        localPathField.clear();
+        remotePathField.clear();
 
         statusLabel.setText("Desconectado");
         updateConnectionState(false);
@@ -800,6 +870,28 @@ public class DashboardController {
     @FXML
     public void handleToggleConnect() {
         if (isConnected) {
+
+            if (thereAreActiveTransfers()) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Transferencias en curso");
+                alert.setHeaderText("Hay transferencias activas");
+                alert.setContentText("Si te desconectas ahora, se cancelarán las subidas/bajadas actuales.\n\n¿Estás seguro de querer desconectar?");
+
+                // Personalizar botones
+                ButtonType btnYes = new ButtonType("Sí, desconectar", ButtonBar.ButtonData.OK_DONE);
+                ButtonType btnNo = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+                alert.getButtonTypes().setAll(btnYes, btnNo);
+
+                // Esperar respuesta
+                java.util.Optional<ButtonType> result = alert.showAndWait();
+
+                // Si dice que NO (o cierra la ventana), abortamos la desconexión
+                if (result.isEmpty() || result.get() != btnYes) {
+                    return;
+                }
+            }
+
             doDisconnect();
         } else {
             doConnect();
@@ -843,6 +935,10 @@ public class DashboardController {
             btnConnect.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold;");
             btnConnect.setGraphic(new FontIcon("fas-plug"));
         }
+
+        if (menuConnect != null) {
+            menuConnect.setText(connected ? "Desconectar" : "Conectar");
+        }
     }
 
     @FXML
@@ -884,5 +980,132 @@ public class DashboardController {
         hostField.setText(preferences.get(PREF_HOST, ""));
         userField.setText(preferences.get(PREF_USER, ""));
         portField.setText(preferences.get(PREF_PORT, ""));
+    }
+
+    @FXML
+    public void handleExit() {
+        // Verificar si estamos conectados y hay actividad
+        if (isConnected && thereAreActiveTransfers()) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Confirmar Salida");
+            alert.setHeaderText("Transferencias en curso");
+            alert.setContentText("Hay archivos transfiriéndose. Si sales, se perderán.\n¿Salir de todos modos?");
+
+            if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+                return; // El usuario se arrepintió
+            }
+        }
+
+        // Desconexión limpia
+        if (isConnected) {
+            doDisconnect();
+        }
+
+        // Matar la aplicación
+        javafx.application.Platform.exit();
+        System.exit(0);
+    }
+
+    @FXML
+    public void handleAbout() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Acerca de");
+        alert.setHeaderText("Vectura SFTP Client v1.0");
+        alert.setContentText("""
+                Desarrollado con JavaFX y SSHJ.
+                
+                Una herramienta simple y segura para transferencia de archivos.
+                2025 © Ibhar Gómez""");
+
+        alert.showAndWait();
+    }
+
+    @FXML
+    public void handleToggleHidden() {
+        // Invertir estado
+        showHiddenFiles = !showHiddenFiles;
+        // Recargar
+        refreshBoth();
+    }
+
+    @FXML
+    public void handleClearQueue() {
+        // Si la lista está vacía, no hacemos nada
+        if (queueTable.getItems().isEmpty()) {
+            return;
+        }
+
+        // removeIf: Borra el elemento si devuelve TRUE
+        boolean deleted = queueTable.getItems().removeIf(task -> {
+            String status = task.getStatus();
+
+            // Protección contra nulos
+            if (status == null) return true;
+
+            // CRITERIO: Borramos solo si terminó (Bien o Mal)
+            return status.equals("Completado") || status.startsWith("Error");
+        });
+
+        if (deleted) {
+            statusLabel.setText("Cola limpiada (Activos conservados).");
+        } else {
+            statusLabel.setText("No hay tareas finalizadas para limpiar.");
+        }
+    }
+
+    @FXML
+    public void handleOpenExplorer() {
+        if (currentLocalPath == null || currentLocalPath.isEmpty()) return;
+
+        try {
+            java.awt.Desktop.getDesktop().open(new File(currentLocalPath));
+        } catch (IOException e) {
+            statusLabel.setText("No se pudo abrir el explorador.");
+        }
+    }
+
+    @FXML
+    public void handleOpenTerminal() {
+        if (currentLocalPath == null || currentLocalPath.isEmpty()) return;
+
+        try {
+            File dir = new File(currentLocalPath);
+            String os = System.getProperty("os.name").toLowerCase();
+
+            if (os.contains("win")) {
+                // Comando para Windows (abre CMD en esa ruta)
+                new ProcessBuilder("cmd", "/c", "start", "cmd.exe", "/K", "cd /d \"" + currentLocalPath + "\"")
+                        .directory(dir)
+                        .start();
+            } else if (os.contains("mac")) {
+                // Comando para Mac
+                new ProcessBuilder("open", "-a", "Terminal", currentLocalPath)
+                        .directory(dir)
+                        .start();
+            } else if (os.contains("nix") || os.contains("nux")) {
+                // Intento genérico para Linux (gnome-terminal)
+                new ProcessBuilder("gnome-terminal", "--working-directory=" + currentLocalPath)
+                        .directory(dir)
+                        .start();
+            }
+        } catch (Exception e) {
+            statusLabel.setText("No se pudo abrir la terminal: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private boolean thereAreActiveTransfers() {
+        // Recorre la cola
+        for (TransferTask task : queueTable.getItems()) {
+            String status = task.getStatus();
+
+            // Si es null ignorar
+            if (status == null) continue;
+
+            // Si no esta completado o no hay error es activo
+            if (!status.equals("Completado") && !status.startsWith("Error")) return true;
+        }
+
+        return false;
     }
 }
