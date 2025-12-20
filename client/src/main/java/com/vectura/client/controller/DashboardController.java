@@ -6,7 +6,6 @@ import com.vectura.client.model.VecturaFile;
 import com.vectura.client.service.SftpService;
 import com.vectura.client.service.TransferManager;
 
-import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -100,11 +99,14 @@ public class DashboardController {
     @FXML
     private Button btnRemoteHome;
 
+    // Check de conexion
     private boolean isConnected = false;
 
+    // Servicios SFTP
     private SftpService sftpService;
     private TransferManager transferManager;
 
+    // Variables de Path
     private String currentLocalPath = "";
     private String localBaseFolder = null;
 
@@ -115,7 +117,7 @@ public class DashboardController {
     private boolean showHiddenFiles = false;
 
     // Preferencias
-    private Preferences preferences = Preferences.userNodeForPackage(DashboardController.class);
+    private final Preferences preferences = Preferences.userNodeForPackage(DashboardController.class);
 
     private static final String PREF_HOST = "sftp_host";
     private static final String PREF_USER = "sftp_user";
@@ -127,8 +129,8 @@ public class DashboardController {
         // Deshabilitar tablas para que no se puedan tocar
         localTable.setDisable(true);
         remoteTable.setDisable(true);
-        localTable.setPlaceholder(new Label("Conéctate para ver archivos locales"));
-        remoteTable.setPlaceholder(new Label("Conéctate para ver archivos remotos"));
+        localTable.setPlaceholder(new Label("Conectate para ver archivos locales"));
+        remoteTable.setPlaceholder(new Label("Conectate para ver archivos remotos"));
 
         setupQueueTable();
         setupContextMenus(); // Clic derecho
@@ -165,13 +167,13 @@ public class DashboardController {
         queueProgressCol.setCellValueFactory(cell -> cell.getValue().progressProperty().asObject());
 
         // Renderizar ProgressBar en celda
-        queueProgressCol.setCellFactory(column -> new TableCell<TransferTask, Double>() {
+        queueProgressCol.setCellFactory(column -> new TableCell<>() {
             private final ProgressBar progressBar = new ProgressBar();
             private final Label progressLabel = new Label();
             private final StackPane stackPane = new StackPane();
 
             {
-                // Configuración inicial
+                // Configuracion inicial
                 progressBar.setMaxWidth(Double.MAX_VALUE);
                 progressBar.setPrefHeight(20);
 
@@ -199,7 +201,7 @@ public class DashboardController {
                     }
 
                     if (progress >= 1.0) {
-                        progressBar.setStyle("-fx-accent: #28a745;"); // Verde éxito
+                        progressBar.setStyle("-fx-accent: #28a745;"); // Verde exito
                         progressLabel.setText("Completado");
                         progressLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-effect: dropshadow(one-pass-box, black, 2, 0, 0, 0);");
                     } else {
@@ -281,7 +283,7 @@ public class DashboardController {
 
         // Descargar
         MenuItem downloadItem = new MenuItem("Descargar a mi PC");
-        downloadItem.setOnAction(e -> handleDownload()); // Implementaremos esto abajo
+        downloadItem.setOnAction(e -> handleDownload());
         downloadItem.setGraphic(new FontIcon("fas-cloud-download-alt"));
 
         //Actualizar
@@ -388,7 +390,6 @@ public class DashboardController {
             });
             remoteTable.setItems(FXCollections.observableArrayList(files));
         } catch (Exception e) {
-            e.printStackTrace();
             statusLabel.setText("Error remoto: " + e.getMessage());
         }
     }
@@ -429,7 +430,7 @@ public class DashboardController {
                     public StreamCopier.Listener file(String name, long size) {
                         updateMessage("Subiendo archivo: " + name);
 
-                        // Listener con cálculo de velocidad
+                        // Listener con calculo de velocidad
                         return new StreamCopier.Listener() {
                             // Variables para recordar el estado anterior
                             private long lastTime = System.currentTimeMillis();
@@ -441,11 +442,11 @@ public class DashboardController {
                                 long total = selected.getSize();
                                 if (total <= 0) total = 1;
 
-                                // 1. Control de tiempo (Throttling)
+                                // Control de tiempo (Throttling)
                                 long now = System.currentTimeMillis();
                                 long timeDiff = now - lastTime;
 
-                                // Actualizamos velocidad cada 500ms para que no parpadee
+                                // Actualizar velocidad cada 500ms para que no parpadee
                                 if (timeDiff >= 500) {
                                     long bytesDiff = transferred - lastBytes;
 
@@ -460,11 +461,11 @@ public class DashboardController {
 
                                 updateProgress(transferred, total);
 
-                                // 2. Mensaje con velocidad
+                                // Mensaje con velocidad
                                 String statusText = String.format("Subiendo... %s / %s (%s)",
                                         humanReadableByteCountSI(transferred),
                                         humanReadableByteCountSI(total),
-                                        speedStr); // <--- AQUÍ LA MAGIA
+                                        speedStr);
 
                                 updateMessage(statusText);
                             }
@@ -493,7 +494,7 @@ public class DashboardController {
             rowItem.progressProperty().unbind();
             rowItem.setProgress(0.0);
             rowItem.setStatus("Error: " + backgroundWorker.getException().getMessage());
-            backgroundWorker.getException().printStackTrace();
+            System.out.println(backgroundWorker.getException().getMessage());
         });
 
         new Thread(backgroundWorker).start();
@@ -513,7 +514,7 @@ public class DashboardController {
         javafx.concurrent.Task<Void> backgroundWorker = new javafx.concurrent.Task<>() {
             @Override
             protected Void call() throws Exception {
-                updateMessage("Iniciando conexión...");
+                updateMessage("Iniciando conexion...");
 
                 String remotePath = currentRemotePath.endsWith("/") ?
                         currentRemotePath + selected.getName() :
@@ -547,7 +548,7 @@ public class DashboardController {
                                 long total = selected.getSize();
                                 if (total <= 0) total = 1;
 
-                                // 1. Cálculo de velocidad (cada 500ms)
+                                // Calculo de velocidad (cada 500ms)
                                 long now = System.currentTimeMillis();
                                 long timeDiff = now - lastTime;
 
@@ -563,7 +564,7 @@ public class DashboardController {
 
                                 updateProgress(transferred, total);
 
-                                // 2. Actualizar mensaje
+                                // Actualizar mensaje
                                 String statusText = String.format("Bajando... %s / %s (%s)",
                                         humanReadableByteCountSI(transferred),
                                         humanReadableByteCountSI(total),
@@ -596,7 +597,7 @@ public class DashboardController {
             rowItem.progressProperty().unbind();
             rowItem.setProgress(0.0);
             rowItem.setStatus("Error: " + backgroundWorker.getException().getMessage());
-            backgroundWorker.getException().printStackTrace();
+            System.out.println(backgroundWorker.getException().getMessage());
         });
 
         new Thread(backgroundWorker).start();
@@ -614,9 +615,9 @@ public class DashboardController {
 
         // Confirmacion
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmar Eliminación");
+        alert.setTitle("Confirmar Eliminacion");
         alert.setHeaderText("¿Eliminar permanentemente '" + selected.getName() + "'?");
-        alert.setContentText("Si es una carpeta, se borrará TODO su contenido. Esta acción no se puede deshacer.");
+        alert.setContentText("Si es una carpeta, se borrara TODO su contenido. Esta accion no se puede deshacer.");
 
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
@@ -647,7 +648,6 @@ public class DashboardController {
                     } catch (Exception e) {
                         javafx.application.Platform.runLater(() -> {
                             statusLabel.setText("Error al eliminar: " + e.getMessage());
-                            e.printStackTrace();
 
                             // Mostrar alerta de error detallada
                             Alert errorAlert = new Alert(Alert.AlertType.ERROR);
@@ -686,7 +686,6 @@ public class DashboardController {
                 statusLabel.setText("Carpeta creada: " + name);
             } catch (Exception e) {
                 statusLabel.setText("Error: " + e.getMessage());
-                e.printStackTrace();
             }
         });
     }
@@ -754,17 +753,18 @@ public class DashboardController {
         String pass = passwordField.getText().trim();
         String portStr = portField.getText().trim();
 
-        // Validaciones básicas
+        // Validaciones basicas
         if (host.isEmpty() || user.isEmpty() || pass.isEmpty()) {
             statusLabel.setText("Por favor llena todos los campos.");
             return;
         }
 
-        int port = 22;
+        int port;
+
         try {
             port = Integer.parseInt(portStr);
         } catch (NumberFormatException e) {
-            statusLabel.setText("El puerto debe ser un número.");
+            statusLabel.setText("El puerto debe ser un numero.");
             return;
         }
 
@@ -799,7 +799,7 @@ public class DashboardController {
             // Guardar datos
             saveSettings();
 
-            // Seleccionar ruta o usar de la sesion anterior
+            // Seleccionar ruta
             currentLocalPath = null;
             localBaseFolder = null;
             localPathField.clear();
@@ -828,10 +828,9 @@ public class DashboardController {
 
             Throwable error = connectTask.getException();
             statusLabel.setText("Error: " + error.getMessage());
-            error.printStackTrace();
 
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error de Conexión");
+            alert.setTitle("Error de Conexion");
             alert.setHeaderText("No se pudo conectar");
             alert.setContentText(error.getMessage());
             alert.show();
@@ -841,12 +840,12 @@ public class DashboardController {
     }
 
     private void doDisconnect() {
-        // Intentar cerrar la sesión SSH
+        // Intentar cerrar la sesion SSH
         if (sftpService != null) {
             try {
                 sftpService.disconnect();
             } catch (Exception e) {
-                e.printStackTrace();
+                statusLabel.setText(e.getMessage());
             }
         }
 
@@ -875,10 +874,10 @@ public class DashboardController {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Transferencias en curso");
                 alert.setHeaderText("Hay transferencias activas");
-                alert.setContentText("Si te desconectas ahora, se cancelarán las subidas/bajadas actuales.\n\n¿Estás seguro de querer desconectar?");
+                alert.setContentText("Si te desconectas ahora, se cancelaran las subidas/bajadas actuales.\n\n¿Estas seguro de querer desconectar?");
 
                 // Personalizar botones
-                ButtonType btnYes = new ButtonType("Sí, desconectar", ButtonBar.ButtonData.OK_DONE);
+                ButtonType btnYes = new ButtonType("Si, desconectar", ButtonBar.ButtonData.OK_DONE);
                 ButtonType btnNo = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
 
                 alert.getButtonTypes().setAll(btnYes, btnNo);
@@ -886,7 +885,7 @@ public class DashboardController {
                 // Esperar respuesta
                 java.util.Optional<ButtonType> result = alert.showAndWait();
 
-                // Si dice que NO (o cierra la ventana), abortamos la desconexión
+                // Si dice que NO (o cierra la ventana), abortamos la desconexion
                 if (result.isEmpty() || result.get() != btnYes) {
                     return;
                 }
@@ -931,7 +930,7 @@ public class DashboardController {
             btnConnect.setStyle("-fx-background-color: #d9534f; -fx-text-fill: white; -fx-font-weight: bold;");
             btnConnect.setGraphic(new FontIcon("fas-times"));
         } else {
-            btnConnect.setText("Conexión Rápida");
+            btnConnect.setText("Conexion Rapida");
             btnConnect.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold;");
             btnConnect.setGraphic(new FontIcon("fas-plug"));
         }
@@ -989,19 +988,19 @@ public class DashboardController {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Confirmar Salida");
             alert.setHeaderText("Transferencias en curso");
-            alert.setContentText("Hay archivos transfiriéndose. Si sales, se perderán.\n¿Salir de todos modos?");
+            alert.setContentText("Hay archivos transfiriendose. Si sales, se perderan.\n¿Salir de todos modos?");
 
             if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
-                return; // El usuario se arrepintió
+                return; // El usuario se arrepintio
             }
         }
 
-        // Desconexión limpia
+        // Desconexion limpia
         if (isConnected) {
             doDisconnect();
         }
 
-        // Matar la aplicación
+        // Matar la aplicacion
         javafx.application.Platform.exit();
         System.exit(0);
     }
@@ -1015,7 +1014,7 @@ public class DashboardController {
                 Desarrollado con JavaFX y SSHJ.
                 
                 Una herramienta simple y segura para transferencia de archivos.
-                2025 © Ibhar Gómez""");
+                2025 © Ibhar Gomez""");
 
         alert.showAndWait();
     }
@@ -1030,7 +1029,7 @@ public class DashboardController {
 
     @FXML
     public void handleClearQueue() {
-        // Si la lista está vacía, no hacemos nada
+        // Si la lista esta vacia, no hacemos nada
         if (queueTable.getItems().isEmpty()) {
             return;
         }
@@ -1039,10 +1038,10 @@ public class DashboardController {
         boolean deleted = queueTable.getItems().removeIf(task -> {
             String status = task.getStatus();
 
-            // Protección contra nulos
+            // Proteccion contra nulos
             if (status == null) return true;
 
-            // CRITERIO: Borramos solo si terminó (Bien o Mal)
+            // CRITERIO: Borramos solo si termino (Bien o Mal)
             return status.equals("Completado") || status.startsWith("Error");
         });
 
@@ -1083,14 +1082,13 @@ public class DashboardController {
                         .directory(dir)
                         .start();
             } else if (os.contains("nix") || os.contains("nux")) {
-                // Intento genérico para Linux (gnome-terminal)
+                // Intento generico para Linux (gnome-terminal)
                 new ProcessBuilder("gnome-terminal", "--working-directory=" + currentLocalPath)
                         .directory(dir)
                         .start();
             }
         } catch (Exception e) {
             statusLabel.setText("No se pudo abrir la terminal: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
