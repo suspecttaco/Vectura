@@ -15,50 +15,60 @@
         <VBox>
             <MenuBar>
                 <Menu text="Archivo">
-                    <items>
-                        <MenuItem fx:id="menuConnect" text="Conectar / Desconectar" onAction="#handleToggleConnect" accelerator="Ctrl+O">
-                            <graphic><FontIcon iconLiteral="fas-network-wired" iconSize="16" iconColor="#333333"/></graphic>
-                        </MenuItem>
-                        <SeparatorMenuItem />
-                        <MenuItem text="Salir" onAction="#handleExit" accelerator="Alt+F4">
-                            <graphic><FontIcon iconLiteral="fas-sign-out-alt" iconSize="16" iconColor="#d9534f"/></graphic>
-                        </MenuItem>
-                    </items>
+                    <MenuItem fx:id="menuConnect" text="Conectar / Desconectar" onAction="#handleToggleConnect"
+                              accelerator="Ctrl+O">
+                        <graphic>
+                            <FontIcon iconLiteral="fas-network-wired" iconSize="16" iconColor="#333333"/>
+                        </graphic>
+                    </MenuItem>
+                    <SeparatorMenuItem/>
+                    <MenuItem text="Salir" onAction="#handleExit" accelerator="Alt+F4">
+                        <graphic>
+                            <FontIcon iconLiteral="fas-sign-out-alt" iconSize="16" iconColor="#d9534f"/>
+                        </graphic>
+                    </MenuItem>
                 </Menu>
 
                 <Menu text="Ver">
-                    <items>
-                        <MenuItem text="Actualizar Todo" onAction="#refreshBoth" accelerator="F5">
-                            <graphic><FontIcon iconLiteral="fas-sync-alt" iconSize="16" iconColor="#333333"/></graphic>
-                        </MenuItem>
-                        <SeparatorMenuItem />
-                        <CheckMenuItem fx:id="menuShowHidden" text="Mostrar Archivos Ocultos" onAction="#handleToggleHidden">
-                            <graphic><FontIcon iconLiteral="fas-eye" iconSize="16" iconColor="#555555"/></graphic>
-                        </CheckMenuItem>
-                    </items>
+                    <MenuItem text="Actualizar Todo" onAction="#refreshBoth" accelerator="F5">
+                        <graphic>
+                            <FontIcon iconLiteral="fas-sync-alt" iconSize="16" iconColor="#333333"/>
+                        </graphic>
+                    </MenuItem>
+                    <SeparatorMenuItem/>
+                    <CheckMenuItem text="Mostrar Archivos Ocultos"
+                                   onAction="#handleToggleHidden">
+                        <graphic>
+                            <FontIcon iconLiteral="fas-eye" iconSize="16" iconColor="#555555"/>
+                        </graphic>
+                    </CheckMenuItem>
                 </Menu>
 
                 <Menu text="Herramientas">
-                    <items>
-                        <MenuItem text="Limpiar Cola de Transferencias" onAction="#handleClearQueue">
-                            <graphic><FontIcon iconLiteral="fas-broom" iconSize="16" iconColor="#e0a800"/></graphic>
-                        </MenuItem>
-                        <SeparatorMenuItem />
-                        <MenuItem text="Abrir Terminal Local Aquí" onAction="#handleOpenTerminal">
-                            <graphic><FontIcon iconLiteral="fas-terminal" iconSize="16" iconColor="#333333"/></graphic>
-                        </MenuItem>
-                        <MenuItem text="Abrir en Explorador" onAction="#handleOpenExplorer">
-                            <graphic><FontIcon iconLiteral="far-folder-open" iconSize="16" iconColor="#007bff"/></graphic>
-                        </MenuItem>
-                    </items>
+                    <MenuItem text="Limpiar Cola de Transferencias" onAction="#handleClearQueue">
+                        <graphic>
+                            <FontIcon iconLiteral="fas-broom" iconSize="16" iconColor="#e0a800"/>
+                        </graphic>
+                    </MenuItem>
+                    <SeparatorMenuItem/>
+                    <MenuItem text="Abrir Terminal Local Aquí" onAction="#handleOpenTerminal">
+                        <graphic>
+                            <FontIcon iconLiteral="fas-terminal" iconSize="16" iconColor="#333333"/>
+                        </graphic>
+                    </MenuItem>
+                    <MenuItem text="Abrir en Explorador" onAction="#handleOpenExplorer">
+                        <graphic>
+                            <FontIcon iconLiteral="far-folder-open" iconSize="16" iconColor="#007bff"/>
+                        </graphic>
+                    </MenuItem>
                 </Menu>
 
                 <Menu text="Ayuda">
-                    <items>
-                        <MenuItem text="Acerca de" onAction="#handleAbout">
-                            <graphic><FontIcon iconLiteral="fas-info-circle" iconSize="16" iconColor="#007bff"/></graphic>
-                        </MenuItem>
-                    </items>
+                    <MenuItem text="Acerca de" onAction="#handleAbout">
+                        <graphic>
+                            <FontIcon iconLiteral="fas-info-circle" iconSize="16" iconColor="#007bff"/>
+                        </graphic>
+                    </MenuItem>
                 </Menu>
             </MenuBar>
 
@@ -209,7 +219,7 @@
     <bottom>
         <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 5 10 5 10; -fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0 transparent transparent transparent;">
             <Label fx:id="statusLabel" maxWidth="Infinity" text="Listo" textFill="#666" HBox.hgrow="ALWAYS" />
-            <ProgressBar fx:id="progressBar" prefWidth="200" progress="0.0" visible="false" />
+            <ProgressBar prefWidth="200" progress="0.0" visible="false" />
         </HBox>
     </bottom>
 </BorderPane>
