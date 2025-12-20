@@ -1,15 +1,11 @@
 package com.vectura.client.service;
 
 import net.schmizz.sshj.sftp.FileMode;
-import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import net.schmizz.sshj.sftp.SFTPClient;
-import net.schmizz.sshj.sftp.SFTPException;
-import net.schmizz.sshj.sftp.Response;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.List;
 
 import net.schmizz.sshj.xfer.FileSystemFile;
