@@ -11,7 +11,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
+import javafx.stage.DirectoryChooser;
 
 import net.schmizz.sshj.common.StreamCopier;
 import net.schmizz.sshj.xfer.TransferListener;
@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 public class DashboardController {
 
@@ -76,15 +77,33 @@ public class DashboardController {
     @FXML
     private Label statusLabel;
 
+    // Botones
+    // Local
+    @FXML private Button btnLocalBrowse;
+    @FXML private Button btnLocalUp;
+    @FXML private Button btnLocalHome;
+
+    // Remoto
+    @FXML private Button btnRemoteUp;
+    @FXML private Button btnRemoteHome;
+
     private boolean isConnected = false;
 
     private SftpService sftpService;
     private TransferManager transferManager;
 
-    private String currentLocalPath = System.getProperty("user.home");
+    private String currentLocalPath = "";
+    private String localBaseFolder = null;
+
     private String currentRemotePath = "/";
+    private String remoteBaseFolder = "/";
 
+    // Preferencias
+    private Preferences preferences = Preferences.userNodeForPackage(DashboardController.class);
 
+    private static final String PREF_HOST = "sftp_host";
+    private static final String PREF_USER = "sftp_user";
+    private static final String PREF_PORT = "sftp_port";
 
     @FXML
     public void initialize() {
@@ -98,6 +117,9 @@ public class DashboardController {
         setupQueueTable();
         setupContextMenus(); // Clic derecho
         updateConnectionState(false);
+
+        // Recuperar datos
+        loadSettings();
     }
 
     private void setupTables() {
@@ -601,17 +623,11 @@ public class DashboardController {
         });
     }
 
-    @FXML
-    public void handleDisconnect() {
-        sftpService.disconnect();
-        // Cerrar ventana actual
-        ((Stage) statusLabel.getScene().getWindow()).close();
-        System.out.println("Desconectado.");
-    }
-
     // Navegacion
     @FXML
-    public void goLocalUp() {
+    public void handleLocalUp() {
+        if (currentLocalPath == null || currentLocalPath.isEmpty() || currentLocalPath.equals(localBaseFolder)) return;
+
         File parent = new File(currentLocalPath).getParentFile();
         if (parent != null) {
             currentLocalPath = parent.getAbsolutePath();
@@ -620,24 +636,36 @@ public class DashboardController {
     }
 
     @FXML
-    public void goLocalHome() {
-        currentLocalPath = System.getProperty("user.home");
+    public void handleLocalHome() {
+        // Si no hay carpeta base forza a seleccionar
+        if (localBaseFolder == null) {
+            handleLocalBrowse();
+            return;
+        }
+
+        // Si hay base volver a ella
+        currentLocalPath = localBaseFolder;
         loadLocalFiles();
     }
 
     @FXML
-    public void goRemoteUp() {
-        if (!currentRemotePath.equals("/")) {
-            int lastSlash = currentRemotePath.lastIndexOf('/');
-            if (lastSlash > 0) currentRemotePath = currentRemotePath.substring(0, lastSlash);
-            else currentRemotePath = "/";
-            loadRemoteFiles();
+    public void handleRemoteUp() {
+        if (!isConnected || currentRemotePath.equals("/")) return;
+
+        int lastSlash = currentRemotePath.lastIndexOf('/');
+        if (lastSlash > 0) {
+            currentRemotePath = currentRemotePath.substring(0, lastSlash);
+        } else {
+            currentRemotePath = "/";
         }
+
+        loadRemoteFiles();
     }
 
     @FXML
-    public void goRemoteHome() {
-        currentRemotePath = "/";
+    public void handleRemoteHome() {
+        if (!isConnected) return;
+        currentRemotePath = remoteBaseFolder;
         loadRemoteFiles();
     }
 
@@ -700,17 +728,27 @@ public class DashboardController {
             updateConnectionState(true);
             statusLabel.setText("Conectado a " + host);
 
-            // Despertar las tablas
-            localTable.setDisable(false);
-            remoteTable.setDisable(false);
+            // Guardar datos
+            saveSettings();
 
-            // Asegurar una ruta local definida (Home)
-            if (currentLocalPath == null || currentLocalPath.isEmpty()) {
-                currentLocalPath = System.getProperty("user.home");
+            // Seleccionar ruta o usar de la sesion anterior
+            currentLocalPath = null;
+            localBaseFolder = null;
+            localPathField.clear();
+            localTable.setPlaceholder(new Label("Seleccione una carpeta local."));
+
+            // Obtener ruta del servidor
+            try {
+                String initialPath = sftpService.getSftpClient().canonicalize(".");
+
+                currentRemotePath = initialPath;
+                remoteBaseFolder = initialPath;
+            } catch (Exception ex) {
+                currentRemotePath = "/";
+                remoteBaseFolder = "/";
             }
 
-            // Carga ambas tablas
-            refreshBoth();
+            loadRemoteFiles();
 
             btnConnect.setDisable(false);
         });
@@ -751,10 +789,6 @@ public class DashboardController {
         localTable.getItems().clear();
         queueTable.getItems().clear();
 
-        // Volver a bloquear
-        remoteTable.setDisable(true);
-        localTable.setDisable(true);
-
         // Resetear rutas
         currentRemotePath = "";
         currentLocalPath = "";
@@ -774,26 +808,81 @@ public class DashboardController {
 
     // Alternar boton
     private void updateConnectionState(boolean connected) {
-        this.isConnected = connected; // Guardar el estado
+        this.isConnected = connected;
 
-        // Bloquear campos
+        // setDisabled = !connected
+        boolean disableNav = !connected;
+
+        // Controlar TABLAS
+        localTable.setDisable(disableNav);
+        remoteTable.setDisable(disableNav);
+
+        // Controlar botones de navegacion
+        if (btnLocalBrowse != null) {
+            btnLocalBrowse.setDisable(disableNav);
+            btnLocalUp.setDisable(disableNav);
+            btnLocalHome.setDisable(disableNav);
+
+            btnRemoteUp.setDisable(disableNav);
+            btnRemoteHome.setDisable(disableNav);
+        }
+
+        // Controlar campos de conexion
         hostField.setDisable(connected);
         userField.setDisable(connected);
         passwordField.setDisable(connected);
         portField.setDisable(connected);
 
-        // Transformar el botón
+        // Transformar boton principal
         if (connected) {
-            // ESTADO: CONECTADO -> Botón Rojo de "Desconectar"
             btnConnect.setText("Desconectar");
-            btnConnect.setStyle("-fx-background-color: #d9534f; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
+            btnConnect.setStyle("-fx-background-color: #d9534f; -fx-text-fill: white; -fx-font-weight: bold;");
             btnConnect.setGraphic(new FontIcon("fas-times"));
         } else {
-            // ESTADO: DESCONECTADO -> Botón Verde de "Conectar"
             btnConnect.setText("Conexión Rápida");
-            btnConnect.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
-
+            btnConnect.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold;");
             btnConnect.setGraphic(new FontIcon("fas-plug"));
         }
+    }
+
+    @FXML
+    public void handleLocalBrowse() {
+        DirectoryChooser chooser = new DirectoryChooser();
+        chooser.setTitle("Seleccionar carpeta de trabajo");
+
+        // Si ya hay una ruta, empezamos ahi. Si no, el chooser abre por defecto en Documentos/PC
+        if (currentLocalPath != null && !currentLocalPath.isEmpty()) {
+            File currentCtx = new File(currentLocalPath);
+            if (currentCtx.exists() && currentCtx.isDirectory()) {
+                chooser.setInitialDirectory(currentCtx);
+            }
+        }
+
+        File selectedDirectory = chooser.showDialog(localTable.getScene().getWindow());
+
+        if (selectedDirectory != null) {
+            String newPath = selectedDirectory.getAbsolutePath();
+
+            // Establecer la ruta actual
+            currentLocalPath = newPath;
+            localBaseFolder = newPath;
+
+            // Cargar
+            loadLocalFiles();
+        }
+    }
+
+    private void saveSettings() {
+        // Guardar preferencias
+        preferences.put(PREF_HOST, hostField.getText().trim());
+        preferences.put(PREF_USER, userField.getText().trim());
+        preferences.put(PREF_PORT, portField.getText().trim());
+    }
+
+    private void loadSettings() {
+        // Recuperar preferencias
+        hostField.setText(preferences.get(PREF_HOST, ""));
+        userField.setText(preferences.get(PREF_USER, ""));
+        portField.setText(preferences.get(PREF_PORT, ""));
     }
 }
