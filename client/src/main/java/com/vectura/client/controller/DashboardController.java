@@ -439,6 +439,43 @@ public class DashboardController {
                         currentRemotePath + selected.getName() :
                         currentRemotePath + "/" + selected.getName();
 
+                // Revisar existencia
+                if (sftpService.getSftpClient().statExistence(remoteDest) != null) {
+
+                    java.util.concurrent.FutureTask<String> query = new java.util.concurrent.FutureTask<>(() ->
+                            askResolution(selected.getName())
+                    );
+                    javafx.application.Platform.runLater(query);
+
+                    String decision = query.get();
+
+                    if ("SKIP".equals(decision)) {
+                        updateMessage("Cancelado por el usuario.");
+                        throw new Exception("Cancelado por el usuario.");
+                    } else if ("RENAME".equals(decision)) {
+                        // Renombrado
+                        String originalName = selected.getName();
+                        String nameNoExt = originalName.contains(".") ? originalName.substring(0, originalName.lastIndexOf('.')) : originalName;
+                        String ext = originalName.contains(".") ? originalName.substring(originalName.lastIndexOf('.')) : "";
+
+                        int i = 1;
+                        // Calcular nuevo nombre
+                        String newName = nameNoExt + " (" + i + ")" + ext;
+                        String newPath = currentRemotePath.endsWith("/") ? currentRemotePath + newName : currentRemotePath + "/" + newName;
+
+                        // Buscar hueco libre en el servidor
+                        while (sftpService.getSftpClient().statExistence(newPath) != null) {
+                            i++;
+                            newName = nameNoExt + " (" + i + ")" + ext;
+                            newPath = currentRemotePath.endsWith("/") ? currentRemotePath + newName : currentRemotePath + "/" + newName;
+                        }
+
+                        // Asignar el nuevo destino final
+                        remoteDest = newPath;
+                        updateMessage("Renombrando a: " + newName);
+                    }
+                }
+
                 // Sensor de progreso
                 TransferListener progressSensor = new TransferListener() {
 
@@ -546,6 +583,41 @@ public class DashboardController {
 
                 File localDestFolder = new File(currentLocalPath);
 
+                // Revisar existencia
+                File targetFile = new File(localDestFolder, selected.getName());
+
+                if (targetFile.exists()) {
+                    java.util.concurrent.FutureTask<String> query = new java.util.concurrent.FutureTask<>(() ->
+                            askResolution(selected.getName())
+                    );
+                    javafx.application.Platform.runLater(query);
+
+                    String decision = query.get();
+
+                    if ("SKIP".equals(decision)) {
+                        updateMessage("Cancelado.");
+                        throw new Exception("Cancelado.");
+                    } else if ("RENAME".equals(decision)) {
+                        // Renombrado local
+                        String originalName = selected.getName();
+                        String nameNoExt = originalName.contains(".") ? originalName.substring(0, originalName.lastIndexOf('.')) : originalName;
+                        String ext = originalName.contains(".") ? originalName.substring(originalName.lastIndexOf('.')) : "";
+
+                        int i = 1;
+                        File newFile = new File(localDestFolder, nameNoExt + " (" + i + ")" + ext);
+
+                        // Buscar hueco libre localmente
+                        while (newFile.exists()) {
+                            i++;
+                            newFile = new File(localDestFolder, nameNoExt + " (" + i + ")" + ext);
+                        }
+
+                        // Cambiar el targetFile al nuevo nombre libre
+                        targetFile = newFile;
+                        updateMessage("Guardando como: " + newFile.getName());
+                    }
+                }
+
                 // Sensor de progreso
                 TransferListener progressSensor = new TransferListener() {
 
@@ -600,7 +672,7 @@ public class DashboardController {
                     }
                 };
 
-                transferManager.download(remotePath, localDestFolder, progressSensor);
+                transferManager.download(remotePath, targetFile, progressSensor);
                 return null;
             }
         };
@@ -1204,5 +1276,27 @@ public class DashboardController {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .orElse(null);
+    }
+
+    // Dialogo de conflictos
+    private String askResolution(String fileName) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Conflicto de Archivos");
+        alert.setHeaderText("El archivo ya existe: " + fileName);
+        alert.setContentText("¿Qué deseas hacer?");
+
+        ButtonType btnOverwrite = new ButtonType("Sobreescribir");
+        ButtonType btnRename = new ButtonType("Renombrar (Auto)"); // <--- NUEVO
+        ButtonType btnSkip = new ButtonType("Saltar (Cancelar)", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        alert.getButtonTypes().setAll(btnOverwrite, btnRename, btnSkip);
+
+        java.util.Optional<ButtonType> result = alert.showAndWait();
+
+        if (result.isPresent()) {
+            if (result.get() == btnOverwrite) return "OVERWRITE";
+            if (result.get() == btnRename) return "RENAME";
+        }
+        return "SKIP";
     }
 }
