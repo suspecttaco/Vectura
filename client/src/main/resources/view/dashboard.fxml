@@ -24,7 +24,7 @@
                     </MenuItem>
                     <SeparatorMenuItem/>
 
-                    <MenuItem text="Renombrar" onAction="#handleRename" accelerator="F2">
+                    <MenuItem text="Renombrar" onAction="#handleRename" >
                         <graphic>
                             <FontIcon iconLiteral="fas-edit" iconSize="16" iconColor="#333333"/>
                         </graphic>
