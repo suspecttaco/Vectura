@@ -6,10 +6,12 @@ import com.vectura.client.model.VecturaFile;
 import com.vectura.client.service.SftpService;
 import com.vectura.client.service.TransferManager;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.stage.DirectoryChooser;
 
@@ -153,6 +155,20 @@ public class DashboardController {
         // Doble clic para entrar en carpetas
         setupDoubleClickHandler(localTable, true);
         setupDoubleClickHandler(remoteTable, false);
+
+        localTable.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.F2) {
+                handleRename();
+                e.consume();
+            }
+        });
+
+        remoteTable.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.F2) {
+                handleRename();
+                e.consume();
+            }
+        });
     }
 
     private void setupQueueTable() {
@@ -269,12 +285,16 @@ public class DashboardController {
         MenuItem mkdirItemL = new MenuItem("Nueva Carpeta");
         mkdirItemL.setOnAction(e -> handleMkdir(true)); // true = local
 
+        // Renombrar local
+        MenuItem renameItemL = new MenuItem("Renombrar");
+        renameItemL.setOnAction(e -> renameLocal());
+
         // Eliminar
         MenuItem deleteItemL = new MenuItem("Eliminar");
         deleteItemL.setOnAction(e -> handleDelete(true)); // true = local
         deleteItemL.setStyle("-fx-text-fill: red;");
 
-        localMenu.getItems().addAll(uploadItem, new SeparatorMenuItem(), mkdirItemL, refreshItemL, new SeparatorMenuItem(), deleteItemL);
+        localMenu.getItems().addAll(uploadItem, new SeparatorMenuItem(), mkdirItemL, refreshItemL, renameItemL, new SeparatorMenuItem(), deleteItemL);
         localTable.setContextMenu(localMenu);
 
 
@@ -294,12 +314,16 @@ public class DashboardController {
         MenuItem mkdirItemR = new MenuItem("Nueva Carpeta");
         mkdirItemR.setOnAction(e -> handleMkdir(false)); // false = remoto
 
+        // Renombrar remoto
+        MenuItem renameItemR = new MenuItem("Renombrar");
+        renameItemR.setOnAction(e -> renameRemote());
+
         // Eliminar
         MenuItem deleteItemR = new MenuItem("Eliminar");
         deleteItemR.setOnAction(e -> handleDelete(false)); // false = remoto
         deleteItemR.setStyle("-fx-text-fill: red;");
 
-        remoteMenu.getItems().addAll(downloadItem, new SeparatorMenuItem(), mkdirItemR, refreshItemR, new SeparatorMenuItem(), deleteItemR);
+        remoteMenu.getItems().addAll(downloadItem, new SeparatorMenuItem(), mkdirItemR, refreshItemR, renameItemR, new SeparatorMenuItem(), deleteItemR);
         remoteTable.setContextMenu(remoteMenu);
     }
 
@@ -1105,5 +1129,80 @@ public class DashboardController {
         }
 
         return false;
+    }
+
+    @FXML
+    public void handleRename() {
+        // Detectar foco
+        if (localTable.isFocused() || !localTable.getSelectionModel().isEmpty()) {
+            renameLocal();
+        } else if (remoteTable.isFocused() || !remoteTable.getSelectionModel().isEmpty()) {
+            renameRemote();
+        } else {
+            statusLabel.setText("Seleccione un archivo para renombrar.");
+        }
+    }
+
+    private void renameLocal() {
+        VecturaFile selected = localTable.getSelectionModel().getSelectedItem();
+        if (selected == null) return;
+
+        String oldName = selected.getName();
+        String newName = promptForName("Renombrar en LOCAL", "Nombre actual: " + oldName, oldName);
+
+        if (newName != null && !newName.equals(oldName)) {
+            File oldFile = new File(selected.getPath());
+            File newFile = new File(oldFile.getParent(), newName);
+
+            if (oldFile.renameTo(newFile)) {
+                statusLabel.setText("Renombrado local: " + newName);
+                loadLocalFiles();
+            } else {
+                statusLabel.setText("Error: no se pudo renombrar el archvio local.");
+            }
+        }
+    }
+
+    private void renameRemote() {
+        VecturaFile selected = remoteTable.getSelectionModel().getSelectedItem();
+        if (selected == null) return;
+
+        String oldName = selected.getName();
+        String newName = promptForName("Renombrar en SERVIDOR", "Nombre actual: " + oldName, oldName);
+
+        if (newName != null && !newName.equals(oldName)) {
+            // Hilo para no congelar UI
+            new Thread(() -> {
+                try {
+                    String path = currentRemotePath.endsWith("/") ? currentRemotePath : currentRemotePath + "/";
+                    String oldPath = path + oldName;
+                    String newPath = path + newName;
+
+                    sftpService.getSftpClient().rename(oldPath, newPath);
+
+                    Platform.runLater(() -> {
+                        statusLabel.setText("Renombrado remoto: " + newName);
+                        loadRemoteFiles();
+                    });
+                } catch (IOException e) {
+                    Platform.runLater(() -> statusLabel.setText("Error remoto: " + e.getMessage()));
+                }
+            }).start();
+        }
+    }
+
+    // Dialogo para obtener nuevo nombre
+    private String promptForName(String title, String header, String currentName) {
+        TextInputDialog dialog = new TextInputDialog(currentName);
+        dialog.setTitle(title);
+        dialog.setHeaderText(header);
+        dialog.setContentText("Nuevo nombre: ");
+
+        dialog.getDialogPane().setGraphic(new FontIcon("fas-edit"));
+
+        return dialog.showAndWait()
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .orElse(null);
     }
 }
