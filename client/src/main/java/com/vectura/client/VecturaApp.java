@@ -13,7 +13,7 @@ public class VecturaApp extends Application {
     public void start(Stage stage) throws IOException {
         // Carga directa del Dashboard (La nueva ventana principal)
         FXMLLoader fxmlLoader = new FXMLLoader(VecturaApp.class.getResource("/view/dashboard.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 1000, 700);
+        Scene scene = new Scene(fxmlLoader.load(), 1080, 720);
 
         stage.setTitle("Vectura SFTP Client");
         stage.setScene(scene);
