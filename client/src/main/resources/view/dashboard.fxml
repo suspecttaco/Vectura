@@ -78,7 +78,7 @@
                 </Menu>
             </MenuBar>
 
-            <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 10px; -fx-background-color: #f4f4f4; -fx-border-color: #cccccc; -fx-border-width: 0 0 1 0;">
+            <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 10px; -fx-border-width: 0 0 1 0;">
 
                 <Label style="-fx-font-weight: bold;" text="Host:" HBox.hgrow="ALWAYS" />
                 <TextField fx:id="hostField" promptText="192.168.1.X" HBox.hgrow="ALWAYS" />
@@ -110,7 +110,7 @@
             <SplitPane dividerPositions="0.5" style="-fx-background-color: transparent;">
 
                 <VBox spacing="8" style="-fx-padding: 0 10 10 0;">
-                    <Label styleClass="label-subtitle" text="Mi PC" />
+                    <Label text="Mi PC" />
                     <HBox alignment="CENTER_LEFT" spacing="5">
 
                         <Button fx:id="btnLocalBrowse" onAction="#handleLocalBrowse" styleClass="button-nav">
@@ -156,7 +156,7 @@
                 </VBox>
 
                 <VBox spacing="8" style="-fx-padding: 0 0 10 10;">
-                    <Label styleClass="label-subtitle" text="Servidor Remoto" />
+                    <Label text="Servidor Remoto" />
                     <HBox alignment="CENTER_LEFT" spacing="5">
 
                         <TextField fx:id="remotePathField" editable="false" promptText="Ruta Remota..." styleClass="address-field" HBox.hgrow="ALWAYS" />
@@ -225,7 +225,7 @@
     </center>
 
     <bottom>
-        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 5 10 5 10; -fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0 transparent transparent transparent;">
+        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 5 10 5 10;">
             <Label fx:id="statusLabel" maxWidth="Infinity" text="Listo" textFill="#666" HBox.hgrow="ALWAYS" />
             <ProgressBar prefWidth="200" progress="0.0" visible="false" />
         </HBox>

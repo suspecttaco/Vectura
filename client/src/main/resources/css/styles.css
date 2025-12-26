@@ -1,191 +1,181 @@
-/* Montserrat - Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap');
-
+/* TEMA OSCURO UNIFICADO (CLIENTE) */
 .root {
-    -fx-font-family: 'Montserrat', sans-serif;
-    -fx-background-color: #f4f4f4;
+    -fx-base: #1e1e1e;
+    -fx-background-color: #1e1e1e;
+    -fx-font-family: 'Segoe UI', 'Roboto', sans-serif;
+    -fx-text-fill: #ecf0f1;
 }
 
-/* Titulos */
-.label-title {
-    -fx-font-size: 24px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #333333;
+/* --- MENÚ SUPERIOR --- */
+.menu-bar {
+    -fx-background-color: #252526;
+    -fx-border-color: transparent transparent #333 transparent;
+    -fx-border-width: 0 0 1 0;
 }
 
-.label-subtitle {
-    -fx-font-size: 14px;
-    -fx-text-fill: #757575;
+.menu-bar .label {
+    -fx-text-fill: #cccccc;
 }
 
-/* Campos de texto */
+.context-menu {
+    -fx-background-color: #252526;
+    -fx-border-color: #333;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 8, 0, 0, 0);
+}
+
+.menu-item:focused {
+    -fx-background-color: #094771; /* Azul Selección */
+}
+
+.menu-item .label {
+    -fx-text-fill: #ecf0f1;
+}
+
+/* --- CAMPOS DE TEXTO E INPUTS --- */
 .text-field, .password-field {
-    -fx-background-color: white;
-    -fx-background-radius: 4;
-    -fx-border-color: #cccccc;
+    -fx-background-color: #2d2d2d;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #636e72;
+    -fx-border-color: #4b4b4b;
     -fx-border-radius: 4;
-    -fx-padding: 8;
-    -fx-font-size: 14px;
+    -fx-background-radius: 4;
+    -fx-padding: 6 8;
 }
 
 .text-field:focused, .password-field:focused {
-    -fx-border-color: #007bff;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,123,255,0.2), 5, 0, 0, 0);
+    -fx-border-color: #3498db;
+    -fx-background-color: #333333;
 }
 
-/* --- BOTONES DE BARRA DE HERRAMIENTAS --- */
-.button-action {
-    -fx-background-color: white;
-    -fx-text-fill: #555;
-    -fx-border-color: #ddd;
-    -fx-border-radius: 4px;
-    -fx-background-radius: 4px;
+/* Estilo especial para la barra de dirección (Address Bar) */
+.address-field {
+    -fx-background-radius: 15;
+    -fx-border-radius: 15;
+    -fx-background-color: #252526;
+    -fx-border-color: #4b4b4b;
+}
+
+/* --- BOTONES --- */
+.button {
+    -fx-background-color: #34495e;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 4;
     -fx-cursor: hand;
-    -fx-padding: 6 12;
-}
-.button-action:hover {
-    -fx-background-color: #f0f0f0;
-    -fx-border-color: #bbb;
+    -fx-border-color: transparent;
 }
 
-/* Botón Primario (Subir/Bajar) - Azul */
-.button-primary {
-    -fx-background-color: #007bff;
-    -fx-text-fill: white;
-    -fx-border-color: #0069d9;
-}
-.button-primary:hover {
-    -fx-background-color: #0069d9;
+.button:hover {
+    -fx-background-color: #4b6584;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 1);
 }
 
-/* Botón Peligro (Borrar) - Rojo suave */
-.button-danger {
-    -fx-background-color: #fff;
-    -fx-text-fill: #dc3545;
-    -fx-border-color: #dc3545;
-}
-.button-danger:hover {
-    -fx-background-color: #dc3545;
-    -fx-text-fill: white;
+.button:pressed {
+    -fx-background-color: #1a252f;
 }
 
-/* Botones de Navegación (Flechas pequeñas) */
+/* Botones de Navegación (Flechas, Home - Transparentes) */
 .button-nav {
     -fx-background-color: transparent;
     -fx-padding: 4 8;
-    -fx-cursor: hand;
+    -fx-border-color: transparent;
 }
 .button-nav:hover {
-    -fx-background-color: #e0e0e0;
-    -fx-background-radius: 3px;
+    -fx-background-color: #3e3e42;
+    -fx-background-radius: 4;
 }
 
-/* --- CAMPOS DE DIRECCIÓN (ADDRESS BARS) --- */
-.address-field {
-    -fx-background-radius: 15px;
-    -fx-border-radius: 15px;
-    -fx-padding: 4 10;
-    -fx-background-color: #fff;
-    -fx-border-color: #ccc;
-}
-.address-field:focused {
-    -fx-border-color: #007bff;
-}
+/* Botón de Conexión (Verde/Rojo según estado se maneja en código, pero base aquí) */
+/* El código Java sobreescribe el color (setStyle), pero el hover base ayuda */
 
-/* --- BARRA DE PROGRESO --- */
-.progress-bar .track {
-    -fx-background-color: #e9ecef;
-    -fx-background-radius: 4px;
-}
-.progress-bar .bar {
-    -fx-background-color: #28a745; /* Verde éxito */
-    -fx-background-radius: 4px;
-    -fx-background-insets: 0;
-}
-
-/* ValidatorFX */
-.error {
-    -fx-border-color: red;
-    -fx-background-color: #fff0f0;
-}
-
-/* --- ESTILO DE TABLAS MODERNAS --- */
-
+/* --- TABLAS (IGUAL QUE EL SERVIDOR) --- */
 .table-view {
-    -fx-background-color: transparent; /* Fondo transparente */
-    -fx-border-color: #e0e0e0;
-    -fx-border-radius: 4px;
-}
-
-/* Encabezados de columna */
-.table-view .column-header-background {
-    -fx-background-color: #f8f9fa; /* Gris muy claro */
-    -fx-border-color: transparent transparent #e0e0e0 transparent;
-    -fx-pref-height: 35px;
-}
-
-.table-view .column-header {
     -fx-background-color: transparent;
-    -fx-size: 13px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #555;
+    -fx-border-color: #333;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #252526;
+    -fx-border-color: transparent transparent #333 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: transparent;
+    -fx-size: 35px;
 }
 
 .table-view .column-header .label {
-    -fx-alignment: CENTER-LEFT; /* Alinea el texto del título a la izquierda */
-    -fx-padding: 0 0 0 10;      /* Un poco de margen para que no pegue al borde */
+    -fx-text-fill: #a5b1c2;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-alignment: CENTER_LEFT;
 }
 
 .table-view .column-header.numeric-column .label {
     -fx-alignment: CENTER-RIGHT;
-    -fx-padding: 0 10 0 0;
 }
 
-/* Celdas */
-.table-cell {
-    -fx-alignment: CENTER-LEFT; /* Texto alineado a la izquierda */
-    -fx-padding: 0 10 0 10;
-    -fx-font-size: 13px;
-    -fx-text-fill: #333;
-    -fx-border-color: transparent; /* Sin líneas verticales feas */
-}
-
-/* Filas */
 .table-row-cell {
-    -fx-background-color: white;
-    -fx-border-color: transparent transparent #f0f0f0 transparent; /* Línea sutil abajo */
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: transparent transparent #2d2d2d transparent;
 }
 
-/* Filas impares (efecto cebra sutil, opcional) */
 .table-row-cell:odd {
-    -fx-background-color: #fafafa;
+    -fx-background-color: #232323;
 }
 
-/* Selección (El azul corporativo) */
-.table-view:focused .table-row-cell:filled:selected {
-    -fx-background-color: #e3f2fd; /* Azul muy clarito de fondo */
-    -fx-background-insets: 0;
+.table-row-cell:selected {
+    -fx-background-color: #094771;
+    -fx-text-fill: white;
 }
 
-.table-view:focused .table-row-cell:filled:selected .table-cell {
-    -fx-text-fill: #007bff; /* Texto azul fuerte */
-    -fx-font-weight: bold;
+.table-cell {
+    -fx-text-fill: #ecf0f1;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 10 0 10;
 }
 
-/* Scrollbars modernos (más delgados) */
-.table-view .scroll-bar:vertical,
-.table-view .scroll-bar:horizontal {
+/* --- BARRAS DE PROGRESO (COLA) --- */
+.progress-bar .track {
+    -fx-background-color: #2d2d2d;
+    -fx-background-radius: 4;
+}
+
+.progress-bar .bar {
+    -fx-background-radius: 4;
+    -fx-background-insets: 1;
+    /* El color se define en el código Java (-fx-accent),
+       pero por defecto usamos el azul del tema */
+    -fx-accent: #3498db;
+}
+
+/* --- SCROLLBARS --- */
+.scroll-bar:vertical, .scroll-bar:horizontal {
     -fx-background-color: transparent;
 }
-.table-view .scroll-bar:vertical .thumb,
-.table-view .scroll-bar:horizontal .thumb {
-    -fx-background-color: #cccccc;
-    -fx-background-radius: 5em;
+.scroll-bar .thumb {
+    -fx-background-color: #4a4a4a;
+    -fx-background-radius: 10;
+}
+.scroll-bar .thumb:hover {
+    -fx-background-color: #6a6a6a;
 }
 
-/* --- BARRA DE HERRAMIENTAS --- */
-.tool-bar {
-    -fx-background-color: white;
-    -fx-border-color: transparent transparent #e0e0e0 transparent;
-    -fx-padding: 10px;
+/* --- SPLIT PANE --- */
+.split-pane:horizontal > .split-pane-divider,
+.split-pane:vertical > .split-pane-divider {
+    -fx-background-color: #1e1e1e;
+    -fx-padding: 0 2 0 2;
+}
+
+/* --- TOOLTIP --- */
+.tooltip {
+    -fx-background-color: #252526;
+    -fx-text-fill: #ecf0f1;
+    -fx-border-color: #7f8c8d;
+    -fx-border-width: 1px;
+    -fx-font-size: 12px;
 }
