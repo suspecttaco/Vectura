@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane prefHeight="700.0" prefWidth="1000.0" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vectura.server.controller.ServerDashboardController">
+
+    <top>
+        <VBox>
+            <MenuBar>
+                <menus>
+                    <Menu text="Servidor">
+                        <items>
+                            <MenuItem onAction="#handleToggleServer" text="Iniciar/Detener" />
+                            <SeparatorMenuItem />
+                            <MenuItem onAction="#handleExit" text="Salir" />
+                        </items>
+                    </Menu>
+
+                    <Menu text="Herramientas">
+                        <items>
+                            <MenuItem onAction="#handleOpenUserManagement" text="Gestión de Usuarios..." />
+                            <SeparatorMenuItem />
+                            <MenuItem onAction="#handleOpenRootFolder" text="Abrir Carpeta Raíz..." />
+                            <MenuItem onAction="#handleBackupDatabase" text="Crear Respaldo BD..." />
+                            <SeparatorMenuItem />
+                            <MenuItem onAction="#handleConfigureFirewall" text="Configurar Firewall (Windows)..." />
+                        </items>
+                    </Menu>
+
+                    <Menu text="Logs">
+                        <items>
+                            <MenuItem onAction="#handleSaveLogs" text="Exportar Historial..." />
+                            <MenuItem onAction="#handleClearLogs" text="Limpiar Terminal" />
+                        </items>
+                    </Menu>
+
+                    <Menu text="Ayuda">
+                        <items>
+                            <MenuItem onAction="#handleAbout" text="Acerca de Vectura" />
+                        </items>
+                    </Menu>
+                </menus>
+            </MenuBar>
+
+            <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: #1a1a1a; -fx-padding: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 10, 0, 0, 0);">
+                <children>
+                    <FontIcon fx:id="statusIcon" iconColor="#e74c3c" iconLiteral="fas-server" iconSize="28" />
+                    <VBox alignment="CENTER_LEFT">
+                        <children>
+                            <Label styleClass="header-label" text="VECTURA SERVER" />
+                            <Label fx:id="statusLabel" text="ESTADO: DETENIDO" textFill="#7f8c8d" />
+                            <Label fx:id="ipLabel" text="IP: -" style="-fx-font-size: 10px; -fx-text-fill: #aaa;" />
+                        </children>
+                    </VBox>
+
+                    <Region HBox.hgrow="ALWAYS" />
+
+                    <HBox alignment="CENTER_RIGHT" spacing="20.0">
+                        <children>
+                            <HBox alignment="CENTER" spacing="10.0" style="-fx-background-color: #252526; -fx-padding: 5 10; -fx-background-radius: 4; -fx-border-color: #333; -fx-border-radius: 4;">
+                                <children>
+                                    <Label style="-fx-font-size: 11px; -fx-text-fill: #aaa; -fx-font-weight: bold;" text="PUERTO:" />
+                                    <TextField fx:id="txtPort" alignment="CENTER" prefWidth="60.0" promptText="2222" text="2222" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-padding: 0; -fx-border-width: 0;"/>
+                                </children>
+                            </HBox>
+
+                            <Button fx:id="btnToggleServer" mnemonicParsing="false" onAction="#handleToggleServer" styleClass="button-action" text="INICIAR">
+                                <graphic><FontIcon iconColor="WHITE" iconLiteral="fas-power-off" iconSize="16" /></graphic>
+                                <padding><Insets bottom="8.0" left="20.0" right="20.0" top="8.0" /></padding>
+                            </Button>
+                        </children>
+                    </HBox>
+                </children>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="5.0" style="-fx-background-color: #111; -fx-padding: 10;">
+            <Label styleClass="section-header" text="TERMINAL DE EVENTOS EN VIVO" textFill="#2ecc71">
+                <graphic><FontIcon iconColor="#2ecc71" iconLiteral="fas-terminal" /></graphic>
+            </Label>
+            <TextArea fx:id="logArea" editable="false" styleClass="console-area" wrapText="true" VBox.vgrow="ALWAYS" />
+        </VBox>
+    </center>
+
+</BorderPane>

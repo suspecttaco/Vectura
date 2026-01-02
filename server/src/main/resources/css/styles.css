@@ -1,0 +1,154 @@
+/* TEMA OSCURO MODERNO Y LIMPIO */
+.root {
+    -fx-base: #1e1e1e;
+    -fx-background-color: #1e1e1e;
+    -fx-font-family: 'Segoe UI', 'Roboto', sans-serif;
+    -fx-text-fill: #ecf0f1;
+}
+
+/* ENCABEZADOS */
+.header-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 1);
+}
+
+.section-header {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #bdc3c7;
+    -fx-padding: 5 0 10 0;
+    -fx-border-color: transparent transparent #34495e transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* CAMPOS DE TEXTO */
+.text-field, .password-field {
+    -fx-background-color: #2d2d2d;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #636e72;
+    -fx-border-color: #4b4b4b;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 8;
+}
+
+.text-field:focused, .password-field:focused {
+    -fx-border-color: #3498db;
+    -fx-background-color: #333333;
+}
+
+/* BOTONES GENERALES */
+.button {
+    -fx-background-color: #34495e;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-padding: 8 16;
+    -fx-border-color: transparent;
+}
+
+.button:hover {
+    -fx-background-color: #4b6584;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 1);
+}
+
+.button:pressed {
+    -fx-background-color: #1a252f;
+}
+
+/* BOTONES DE ACCIÓN ESPECÍFICOS */
+.button-action { /* Botón de Iniciar (Verde sobrio) */
+    -fx-background-color: #27ae60;
+}
+.button-action:hover {
+    -fx-background-color: #2ecc71;
+}
+
+.button-danger { /* Botón de Eliminar/Detener (Rojo sobrio) */
+    -fx-background-color: #c0392b;
+}
+.button-danger:hover {
+    -fx-background-color: #e74c3c;
+}
+
+/* TABLA DE USUARIOS */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: #333;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #252526;
+    -fx-border-color: transparent transparent #333 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: transparent;
+    -fx-size: 35px;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #a5b1c2;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* Filas de la tabla */
+.table-row-cell {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: transparent transparent #2d2d2d transparent;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #232323;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #094771; /* Azul selección VS Code */
+    -fx-text-fill: white;
+}
+
+.table-cell {
+    -fx-text-fill: #ecf0f1;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 10 0 10;
+}
+
+/* BARRAS DE DESPLAZAMIENTO (Minimalistas) */
+.scroll-bar:vertical, .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+.scroll-bar .thumb {
+    -fx-background-color: #4a4a4a;
+    -fx-background-radius: 10;
+}
+.scroll-bar .thumb:hover {
+    -fx-background-color: #6a6a6a;
+}
+
+/* CONSOLA DE LOGS */
+.console-area {
+    -fx-font-family: 'Consolas', 'Monospaced';
+    -fx-font-size: 12px;
+    -fx-text-fill: #dcdcdc; /* Gris claro, menos agresivo que el verde neón */
+    -fx-background-color: #111111;
+    -fx-control-inner-background: #111111;
+    -fx-border-color: #333;
+    -fx-border-radius: 4;
+}
+
+.console-area .content {
+    -fx-background-color: #111111;
+}
+
+.split-pane:horizontal > .split-pane-divider {
+    -fx-background-color: #1e1e1e;
+    -fx-padding: 0 2 0 2;
+}
