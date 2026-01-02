@@ -90,9 +90,3 @@ Instrucciones para generar el ejecutable a partir del código fuente en un entor
 * **Servidor SFTP:** Apache MINA SSHD
 * **Persistencia:** H2 Database Engine
 * **Empaquetado:** JPackage
-
----
-
-## Licencia
-
-Copyright © 2025 Ibhar Gomez.
