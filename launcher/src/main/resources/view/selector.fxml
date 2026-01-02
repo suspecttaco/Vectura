@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox alignment="CENTER" prefHeight="450.0" prefWidth="700.0" spacing="40.0"
+      stylesheets="@../css/styles.css" styleClass="root"
+      xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.vectura.launcher.controller.SelectorController">
+
+    <Label text="VECTURA SUITE" styleClass="header-label" style="-fx-font-size: 32px;" />
+    <Label text="Seleccione el modo de ejecución" style="-fx-text-fill: #bdc3c7; -fx-font-size: 16px;" />
+
+    <HBox alignment="CENTER" spacing="50.0">
+        <Button onAction="#launchClient" prefHeight="200.0" prefWidth="220.0"
+                style="-fx-background-color: #2c3e50; -fx-cursor: hand; -fx-border-color: #34495e; -fx-border-width: 2;">
+            <graphic>
+                <VBox alignment="CENTER" spacing="20.0">
+                    <FontIcon iconLiteral="fas-laptop" iconSize="70" iconColor="#3498db" />
+                    <Label text="CLIENTE" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20px;" />
+                    <Label text="Conectar y transferir" style="-fx-text-fill: #95a5a6;" />
+                </VBox>
+            </graphic>
+        </Button>
+
+        <Button onAction="#launchServer" prefHeight="200.0" prefWidth="220.0"
+                style="-fx-background-color: #2c3e50; -fx-cursor: hand; -fx-border-color: #34495e; -fx-border-width: 2;">
+            <graphic>
+                <VBox alignment="CENTER" spacing="20.0">
+                    <FontIcon iconLiteral="fas-server" iconSize="70" iconColor="#e74c3c" />
+                    <Label text="SERVIDOR" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20px;" />
+                    <Label text="Hospedar archivos" style="-fx-text-fill: #95a5a6;" />
+                </VBox>
+            </graphic>
+        </Button>
+    </HBox>
+
+    <Label text="Vectura v1.0 Production Build" style="-fx-text-fill: #555;" />
+</VBox>
