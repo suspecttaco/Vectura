@@ -116,7 +116,11 @@ public class ServerDashboardController {
             int port = Integer.parseInt(txtPort.getText());
             sshd = SshServer.setUpDefaultServer();
             sshd.setPort(port);
-            sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(new File("hostkey.ser").toPath()));
+            File hostKeyFile = new File("hostkey.ser");
+            SimpleGeneratorHostKeyProvider provider = new SimpleGeneratorHostKeyProvider(hostKeyFile.toPath());
+            provider.setAlgorithm("RSA");
+
+            sshd.setKeyPairProvider(provider);
 
             // Factory y Listener
             VecturaSftpSubsystemFactory sftpFactory = new VecturaSftpSubsystemFactory(this::log);

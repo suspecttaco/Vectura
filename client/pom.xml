@@ -17,7 +17,12 @@
         <dependency>
             <groupId>com.hierynomus</groupId>
             <artifactId>sshj</artifactId>
-            <version>0.40.0</version>
+            <version>0.40.0</version> <exclusions>
+            <exclusion>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>*</artifactId>
+            </exclusion>
+        </exclusions>
         </dependency>
 
         <dependency>
