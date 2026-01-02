@@ -95,5 +95,4 @@ Instrucciones para generar el ejecutable a partir del código fuente en un entor
 
 ## Licencia
 
-Este proyecto se distribuye bajo [Nombre de la Licencia].
 Copyright © 2025 Ibhar Gomez.
