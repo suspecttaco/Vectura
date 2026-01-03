@@ -2,6 +2,7 @@ package com.vectura.server.fs;
 
 import com.vectura.server.auth.CustomDatabaseAuthenticator;
 
+import com.vectura.server.util.UILogManager;
 import org.apache.sshd.common.file.FileSystemFactory;
 import org.apache.sshd.common.file.root.RootedFileSystemProvider;
 import org.apache.sshd.common.session.SessionContext;
@@ -29,6 +30,7 @@ public class VecturaFileSystemFactory implements FileSystemFactory {
 
         if (homeDirStr == null) {
             LOG.error("No home directory found for session {}", sessionContext);
+            UILogManager.log(String.format("No home directory found for session: %s", sessionContext));
             throw new IOException("No home directory defined for session");
         }
 
@@ -37,10 +39,12 @@ public class VecturaFileSystemFactory implements FileSystemFactory {
 
         if (!Files.exists(homePath)) {
             LOG.warn("Home directory {} does not exist. Creating...", homePath);
+            UILogManager.log(String.format("Home directory '%s' does not exist. Creating...", homePath));
             Files.createDirectories(homePath);
         }
 
         LOG.info("Caging user home directory at {}", homePath);
+        UILogManager.log(String.format("Caging user home directory at '%s'", homePath));
 
         return new RootedFileSystemProvider().newFileSystem(homePath, Collections.emptyMap());
     }

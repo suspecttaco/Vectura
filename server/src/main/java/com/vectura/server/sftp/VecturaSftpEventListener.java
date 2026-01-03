@@ -1,5 +1,6 @@
 package com.vectura.server.sftp;
 
+import com.vectura.server.util.UILogManager;
 import org.apache.sshd.server.session.ServerSession;
 import org.apache.sshd.sftp.server.FileHandle;
 import org.apache.sshd.sftp.server.Handle;
@@ -23,7 +24,7 @@ public class VecturaSftpEventListener implements SftpEventListener {
 
     @Override
     public void initialized(ServerSession session, int version) {
-        log(session, "[SFTP] Subsistema inicializado (v" + version + ")");
+        // Descartado log
     }
 
     @Override
@@ -54,14 +55,14 @@ public class VecturaSftpEventListener implements SftpEventListener {
             String name = path.getFileName().toString();
 
             if (thrown != null) {
-                log(session, "[ERROR] Fallo en archivo '" + name + "': " + thrown.getMessage());
+                log(session, "[ERROR] Failed on file '" + name + "': " + thrown.getMessage());
                 return;
             }
 
             if (isUpload != null && isUpload) {
-                log(session, "[UPLOAD] Subida finalizada: " + name);
+                log(session, "[UPLOAD] Upload completed: " + name);
             } else {
-                log(session, "[DOWNLOAD] Descarga/Lectura finalizada: " + name);
+                log(session, "[DOWNLOAD] Download/Read completed: " + name);
             }
         }
     }
@@ -69,26 +70,27 @@ public class VecturaSftpEventListener implements SftpEventListener {
     @Override
     public void removed(ServerSession session, Path path, boolean isDirectory, Throwable thrown) {
         if (thrown == null) {
-            log(session, "[DELETE] Eliminado: " + path.getFileName());
+            log(session, "[DELETE] Deleted: " + path.getFileName());
         }
     }
 
     @Override
     public void moved(ServerSession session, Path srcPath, Path dstPath, Collection<CopyOption> opts, Throwable thrown) {
         if (thrown == null) {
-            log(session, "[RENAME] Renombrado: " + srcPath.getFileName() + " -> " + dstPath.getFileName());
+            log(session, "[RENAME] Renamed: " + srcPath.getFileName() + " -> " + dstPath.getFileName());
         }
     }
 
     @Override
     public void created(ServerSession session, Path path, Map<String, ?> attrs, Throwable thrown) {
         if (thrown == null && java.nio.file.Files.isDirectory(path)) {
-            log(session, "[MKDIR] Directorio creado: " + path.getFileName());
+            log(session, "[MKDIR] Directory created: " + path.getFileName());
         }
     }
 
     private void log(ServerSession session, String msg) {
         String user = (session != null && session.getUsername() != null) ? session.getUsername() : "UNKNOWN";
         logger.accept("[" + user + "] " + msg);
+        UILogManager.log("[" + user + "] " + msg);
     }
 }

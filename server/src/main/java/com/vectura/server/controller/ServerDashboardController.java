@@ -6,6 +6,7 @@ import com.vectura.server.fs.VecturaFileSystemFactory;
 import com.vectura.server.sftp.VecturaSftpSubsystemFactory;
 import com.vectura.server.util.FirewallManager;
 
+import com.vectura.server.util.UILogManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -29,6 +30,8 @@ import java.util.Collections;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
+import static com.vectura.server.util.UILogManager.*;
+
 public class ServerDashboardController {
 
     // UI Elements
@@ -46,15 +49,17 @@ public class ServerDashboardController {
 
     @FXML
     public void initialize() {
-        log("[SYSTEM] Dashboard inicializado.");
+        setup(logArea);
+
+        log("[SYSTEM] Dashboard initialized.");
 
         // Conectar BD al inicio
         try {
             dbManager = new DatabaseManager();
             dbManager.init();
-            log("[DB] Base de datos conectada.");
+            log("[DB] Database connected.");
         } catch (Exception e) {
-            logError("Error CRÍTICO BD: " + e.getMessage());
+            log("Database error: " + e.getMessage());
         }
 
         // DETECTAR IP
@@ -82,8 +87,7 @@ public class ServerDashboardController {
             stage.showAndWait(); // Esperar a que se cierre
 
         } catch (IOException e) {
-            logError("No se pudo abrir la ventana de usuarios: " + e.getMessage());
-            e.printStackTrace();
+            log("Can't open user manager: " + e.getMessage());
         }
     }
 
@@ -124,7 +128,7 @@ public class ServerDashboardController {
             sshd.setKeyPairProvider(provider);
 
             // Factory y Listener
-            VecturaSftpSubsystemFactory sftpFactory = new VecturaSftpSubsystemFactory(this::log);
+            VecturaSftpSubsystemFactory sftpFactory = new VecturaSftpSubsystemFactory(UILogManager::log);
             sshd.setSubsystemFactories(Collections.singletonList(sftpFactory));
 
             // Session Listener
@@ -134,13 +138,13 @@ public class ServerDashboardController {
                 @Override
                 public void sessionEvent(Session session, Event event) {
                     if (event == Event.Authenticated) {
-                        log("[" + session.getUsername() + "] [LOGIN] Acceso exitoso (" + session.getRemoteAddress() + ")");
+                        log("[" + session.getUsername() + "] [LOGIN] Successful access (" + session.getRemoteAddress() + ")");
                     }
                 }
                 @Override
                 public void sessionClosed(Session session) {
                     if(session.getUsername() != null) {
-                        log("[" + session.getUsername() + "] [LOGOUT] Desconectado");
+                        log("[" + session.getUsername() + "] [LOGOUT] Disconnected");
                     }
                 }
             });
@@ -152,10 +156,10 @@ public class ServerDashboardController {
             sshd.start();
             isRunning = true;
             updateStatusUI(true, port);
-            log("[SERVER] Servidor INICIADO en puerto " + port);
+            log("[SERVER] Server STARTED on port " + port);
 
         } catch (Exception e) {
-            logError("Fallo al iniciar: " + e.getMessage());
+            log("Failed to start server: " + e.getMessage());
         }
     }
 
@@ -164,9 +168,9 @@ public class ServerDashboardController {
             if (sshd != null) sshd.stop();
             isRunning = false;
             updateStatusUI(false, 0);
-            log("[SERVER] Servidor DETENIDO");
+            log("[SERVER] Server STOPPED");
         } catch (Exception e) {
-            logError(e.getMessage());
+            log(e.getMessage());
         }
     }
 
@@ -188,11 +192,7 @@ public class ServerDashboardController {
         }
     }
 
-    private void log(String msg) {
-        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-        Platform.runLater(() -> logArea.appendText(time + " " + msg + "\n"));
-    }
-    private void logError(String msg) { log("[ERROR] " + msg); }
+
     public void shutdown() { stopServer(); }
 
     @FXML
@@ -201,18 +201,20 @@ public class ServerDashboardController {
             // Buscamos la carpeta raiz.
             File rootDir = new File("./sftp_root");
             if (!rootDir.exists()) {
-                rootDir.mkdirs();
+                if (rootDir.mkdirs()) {
+                    log("Root folder created");
+                }
             }
 
             // Abrir con el explorador nativo del sistema operativo
             if (java.awt.Desktop.isDesktopSupported()) {
                 java.awt.Desktop.getDesktop().open(rootDir);
-                log("[SYSTEM] Carpeta raíz abierta en explorador.");
+                log("[SYSTEM] Root folder opened in explorer.");
             } else {
-                logError("La función de escritorio no está soportada en este sistema.");
+                log("Desktop functionality is not supported on this system.");
             }
         } catch (IOException e) {
-            logError("No se pudo abrir la carpeta: " + e.getMessage());
+            log("Could not open folder: " + e.getMessage());
         }
     }
 
@@ -230,9 +232,9 @@ public class ServerDashboardController {
         if (file != null) {
             try {
                 java.nio.file.Files.writeString(file.toPath(), logArea.getText());
-                log("[SYSTEM] Logs exportados correctamente a: " + file.getName());
+                log("[SYSTEM] Logs exported successfully to: " + file.getName());
             } catch (IOException e) {
-                logError("Error al guardar logs: " + e.getMessage());
+                log("Error saving logs: " + e.getMessage());
             }
         }
     }
@@ -240,7 +242,7 @@ public class ServerDashboardController {
     @FXML
     public void handleClearLogs() {
         logArea.clear();
-        log("[SYSTEM] Terminal limpiada por el usuario.");
+        log("[SYSTEM] Terminal cleared by user.");
     }
 
     @FXML
@@ -260,12 +262,12 @@ public class ServerDashboardController {
             try (Connection conn = dbManager.getConnection();
                  java.sql.Statement stmt = conn.createStatement()) {
 
-                log("[SYSTEM] Iniciando respaldo en caliente...");
+                log("[SYSTEM] Starting hot backup...");
 
                 // Backup H2
                 stmt.execute("BACKUP TO '" + destFile.getAbsolutePath() + "'");
 
-                log("[SYSTEM] Respaldo guardado exitosamente: " + destFile.getName());
+                log("[SYSTEM] Backup saved successfully: " + destFile.getName());
 
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Respaldo Exitoso");
@@ -274,8 +276,7 @@ public class ServerDashboardController {
                 alert.showAndWait();
 
             } catch (Exception e) {
-                logError("Error crítico al generar respaldo: " + e.getMessage());
-                e.printStackTrace();
+                log("Critical error generating backup: " + e.getMessage());
             }
         }
     }
@@ -285,10 +286,12 @@ public class ServerDashboardController {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Acerca de Vectura Server");
         alert.setHeaderText("Vectura SFTP Server v1.0");
-        alert.setContentText("Sistema de Gestión de Archivos Seguro.\n\n" +
-                "Tecnologías: JavaFX, Apache SSHD, H2 Database.\n" +
-                "Desarrollado para entorno de producción.\n" +
-                "2025 © Ibhar Gomez");
+        alert.setContentText("""
+                Sistema de Gestión de Archivos Seguro.
+                
+                Tecnologías: JavaFX, Apache SSHD, H2 Database.
+                Desarrollado para entorno de producción.
+                2025 © Ibhar Gomez""");
         alert.showAndWait();
     }
 
@@ -336,9 +339,11 @@ public class ServerDashboardController {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Configuración de Firewall");
         confirm.setHeaderText("Configuración Automática");
-        confirm.setContentText("Se configurarán las reglas de red para permitir conexiones.\n" +
-                "Se solicitarán permisos de Administrador de Windows.\n\n" +
-                "¿Desea continuar?");
+        confirm.setContentText("""
+                Se configurarán las reglas de red para permitir conexiones.
+                Se solicitarán permisos de Administrador de Windows.
+                
+                ¿Desea continuar?""");
 
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             try {
@@ -349,10 +354,10 @@ public class ServerDashboardController {
                 boolean launched = FirewallManager.configureFirewall(port);
 
                 if (launched) {
-                    log("[SYSTEM] Solicitud de firewall enviada al sistema.");
+                    log("[SYSTEM] Firewall request sent to system.");
                 }
             } catch (NumberFormatException e) {
-                logError("El puerto debe ser un número válido.");
+                log("The port must be a valid number.");
             }
         }
     }
