@@ -115,6 +115,7 @@ public class ServerDashboardController {
         try {
             int port = Integer.parseInt(txtPort.getText());
             sshd = SshServer.setUpDefaultServer();
+            sshd.getProperties().put("idle-timeout", java.time.Duration.ZERO);
             sshd.setPort(port);
             File hostKeyFile = new File("hostkey.ser");
             SimpleGeneratorHostKeyProvider provider = new SimpleGeneratorHostKeyProvider(hostKeyFile.toPath());

@@ -26,6 +26,10 @@ public class SftpService {
         }
 
         sshClient = new SSHClient();
+        // Implementacion KeepAlive para clientes inactivos
+        sshClient.getConnection().getKeepAlive().setKeepAliveInterval(5);
+        sshClient.setConnectTimeout(10000);
+        sshClient.setTimeout(0);
 
         sshClient.addHostKeyVerifier(new PromiscuousVerifier());
 
@@ -82,7 +86,10 @@ public class SftpService {
 
     public TransferManager getTransferManager() throws IOException {
         ensureConnected();
-        return new TransferManager(this.sftpClient);
+
+        SFTPClient isolatedClient = sshClient.newSFTPClient();
+
+        return new TransferManager(isolatedClient);
     }
 
     public SFTPClient getSftpClient() {
