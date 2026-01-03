@@ -45,7 +45,7 @@ public class VecturaSftpSubsystem extends SftpSubsystem {
         long length = buffer.getLong();
 
         LOG.info("HASH request received for: {}", filename);
-        UILogManager.log(String.format("HASH request received for: %s", filename));
+        UILogManager.log(String.format("[SFTP-CMD] HASH request received for: %s", filename));
 
         try {
             Path file = resolveFile(filename);
@@ -57,7 +57,7 @@ public class VecturaSftpSubsystem extends SftpSubsystem {
 
             String hash = HashUtils.calculateSha256(file);
             LOG.info("Hash calculated: {}", hash);
-            UILogManager.log(String.format("Hash calculated: %s", hash));
+            UILogManager.log(String.format("[SFTP-CMD] Hash calculated: %s", hash));
 
             Buffer reply = new ByteArrayBuffer();
             reply.putByte((byte) SftpConstants.SSH_FXP_NAME);
@@ -70,7 +70,7 @@ public class VecturaSftpSubsystem extends SftpSubsystem {
             send(reply);
         } catch (Exception e) {
             LOG.error("Error calculating hash", e);
-            UILogManager.log(String.format("Error calculating hash: %s", e));
+            UILogManager.log(String.format("[SFTP-CMD] Error calculating hash: %s", e));
             sendError(id, SftpConstants.SSH_FX_FAILURE, "Error interno: " + e.getMessage());
         }
     }

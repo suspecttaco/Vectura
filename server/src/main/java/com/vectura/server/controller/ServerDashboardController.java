@@ -6,7 +6,6 @@ import com.vectura.server.fs.VecturaFileSystemFactory;
 import com.vectura.server.sftp.VecturaSftpSubsystemFactory;
 import com.vectura.server.util.FirewallManager;
 
-import com.vectura.server.util.UILogManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -59,7 +58,7 @@ public class ServerDashboardController {
             dbManager.init();
             log("[DB] Database connected.");
         } catch (Exception e) {
-            log("Database error: " + e.getMessage());
+            log("[DB] Database error: " + e.getMessage());
         }
 
         // DETECTAR IP
@@ -87,7 +86,7 @@ public class ServerDashboardController {
             stage.showAndWait(); // Esperar a que se cierre
 
         } catch (IOException e) {
-            log("Can't open user manager: " + e.getMessage());
+            log("[UI] Can't open user manager: " + e.getMessage());
         }
     }
 
@@ -128,7 +127,7 @@ public class ServerDashboardController {
             sshd.setKeyPairProvider(provider);
 
             // Factory y Listener
-            VecturaSftpSubsystemFactory sftpFactory = new VecturaSftpSubsystemFactory(UILogManager::log);
+            VecturaSftpSubsystemFactory sftpFactory = new VecturaSftpSubsystemFactory();
             sshd.setSubsystemFactories(Collections.singletonList(sftpFactory));
 
             // Session Listener
@@ -138,13 +137,13 @@ public class ServerDashboardController {
                 @Override
                 public void sessionEvent(Session session, Event event) {
                     if (event == Event.Authenticated) {
-                        log("[" + session.getUsername() + "] [LOGIN] Successful access (" + session.getRemoteAddress() + ")");
+                        log("[LOGIN] [" + session.getUsername() + "] Successful access (" + session.getRemoteAddress() + ")");
                     }
                 }
                 @Override
                 public void sessionClosed(Session session) {
                     if(session.getUsername() != null) {
-                        log("[" + session.getUsername() + "] [LOGOUT] Disconnected");
+                        log("[LOGOUT] [" + session.getUsername() + "] Disconnected");
                     }
                 }
             });
@@ -159,7 +158,7 @@ public class ServerDashboardController {
             log("[SERVER] Server STARTED on port " + port);
 
         } catch (Exception e) {
-            log("Failed to start server: " + e.getMessage());
+            log("[SERVER] Failed to start server: " + e.getMessage());
         }
     }
 
@@ -211,10 +210,10 @@ public class ServerDashboardController {
                 java.awt.Desktop.getDesktop().open(rootDir);
                 log("[SYSTEM] Root folder opened in explorer.");
             } else {
-                log("Desktop functionality is not supported on this system.");
+                log("[SYSTEM] Desktop functionality is not supported on this system.");
             }
         } catch (IOException e) {
-            log("Could not open folder: " + e.getMessage());
+            log("[SYSTEM] Could not open folder: " + e.getMessage());
         }
     }
 
@@ -234,7 +233,7 @@ public class ServerDashboardController {
                 java.nio.file.Files.writeString(file.toPath(), logArea.getText());
                 log("[SYSTEM] Logs exported successfully to: " + file.getName());
             } catch (IOException e) {
-                log("Error saving logs: " + e.getMessage());
+                log("[SYSTEM] Error saving logs: " + e.getMessage());
             }
         }
     }
@@ -276,7 +275,7 @@ public class ServerDashboardController {
                 alert.showAndWait();
 
             } catch (Exception e) {
-                log("Critical error generating backup: " + e.getMessage());
+                log("[SYSTEM] Critical error generating backup: " + e.getMessage());
             }
         }
     }
@@ -357,7 +356,7 @@ public class ServerDashboardController {
                     log("[SYSTEM] Firewall request sent to system.");
                 }
             } catch (NumberFormatException e) {
-                log("The port must be a valid number.");
+                log("[SYSTEM] The port must be a valid number.");
             }
         }
     }

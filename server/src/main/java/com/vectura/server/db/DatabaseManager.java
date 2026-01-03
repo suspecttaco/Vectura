@@ -21,7 +21,7 @@ public class DatabaseManager {
 
     public void init() throws SQLException {
         LOG.info("Init Database Manager in: {}", DB_URL);
-        UILogManager.log(String.format("Init Database Manager in: %s", DB_URL));
+        UILogManager.log(String.format("[DB] Init Database Manager in: %s", DB_URL));
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
             String sqlCreate = "CREATE TABLE IF NOT EXISTS users (" +
@@ -55,7 +55,7 @@ public class DatabaseManager {
 
     private void createAdminUser(Connection conn) throws SQLException {
         LOG.warn("Creating Admin User");
-        UILogManager.log("Creating Admin User");
+        UILogManager.log("[DB] Creating Admin User");
 
 
         String sqlInsert = "INSERT INTO users (username, password_hash, home_dir) VALUES (?, ?, ?)";
@@ -71,7 +71,7 @@ public class DatabaseManager {
 
             stmt.executeUpdate();
             LOG.info("Admin Created");
-            UILogManager.log("Admin Created");
+            UILogManager.log("[DB] Admin Created");
 
         }
     }

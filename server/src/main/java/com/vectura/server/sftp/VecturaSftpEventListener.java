@@ -11,15 +11,12 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 public class VecturaSftpEventListener implements SftpEventListener {
 
-    private final Consumer<String> logger;
     private final Map<String, Boolean> uploadTracker = new ConcurrentHashMap<>();
 
-    public VecturaSftpEventListener(Consumer<String> logger) {
-        this.logger = logger;
+    public VecturaSftpEventListener() {
     }
 
     @Override
@@ -90,7 +87,6 @@ public class VecturaSftpEventListener implements SftpEventListener {
 
     private void log(ServerSession session, String msg) {
         String user = (session != null && session.getUsername() != null) ? session.getUsername() : "UNKNOWN";
-        logger.accept("[" + user + "] " + msg);
-        UILogManager.log("[" + user + "] " + msg);
+        UILogManager.log("[EVENT] [" + user + "] " + msg);
     }
 }

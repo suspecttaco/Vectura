@@ -27,7 +27,7 @@ public class CustomDatabaseAuthenticator implements PasswordAuthenticator {
     @Override
     public boolean authenticate(String username, String password, ServerSession serverSession) throws PasswordChangeRequiredException, AsyncAuthException {
         LOG.info("Authentication attempt for '{}' from '{}'", username, serverSession.getUsername());
-        UILogManager.log(String.format("Authentication attempt for '%s' from '%s'", username, serverSession.getUsername()));
+        UILogManager.log(String.format("[AUTH] Authentication attempt for '%s' from '%s'", username, serverSession.getUsername()));
 
         try (Connection conn = dbManager.getConnection()) {
             // Busqueda de hash y usuario activo
@@ -47,22 +47,22 @@ public class CustomDatabaseAuthenticator implements PasswordAuthenticator {
                             // Guardar ruta en sesion
                             serverSession.setAttribute(USER_HOME_DIR_KEY, homeDir);
                             LOG.info("Authentication successful for '{}'", username);
-                            UILogManager.log(String.format("Authentication successful for '%s'", username));
+                            UILogManager.log(String.format("[AUTH] Authentication successful for '%s'", username));
                             return true;
                         } else {
-                            LOG.warn("Authentication failed for '{}'", username);
-                            UILogManager.log(String.format("Authentication failed for '%s'", username));
+                            LOG.warn("[AUTH] Authentication failed for '{}'", username);
+                            UILogManager.log(String.format("[AUTH] Authentication failed for '%s'", username));
                         }
                     } else {
-                        LOG.warn("User '{}' not found or inactive", username);
-                        UILogManager.log(String.format("User '%s' not found or inactive", username));
+                        LOG.warn("[AUTH] User '{}' not found or inactive", username);
+                        UILogManager.log(String.format("[AUTH] User '%s' not found or inactive", username));
                     }
                 }
             }
 
         } catch (Exception e) {
             LOG.error("Database error", e);
-            UILogManager.log(String.format("Database error: %s", e));
+            UILogManager.log(String.format("[DB] Database error: %s", e));
         }
 
         return false;
