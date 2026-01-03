@@ -2,6 +2,8 @@ package com.vectura.server.fs;
 
 import com.vectura.server.auth.CustomDatabaseAuthenticator;
 
+import com.vectura.server.util.UILogManager;
+import org.apache.sshd.common.AttributeRepository;
 import org.apache.sshd.common.file.FileSystemFactory;
 import org.apache.sshd.common.file.root.RootedFileSystemProvider;
 import org.apache.sshd.common.session.SessionContext;
@@ -17,6 +19,8 @@ import java.util.Collections;
 
 public class VecturaFileSystemFactory implements FileSystemFactory {
     private static final Logger LOG = LoggerFactory.getLogger(VecturaFileSystemFactory.class);
+    // Flag de encapsulamiento
+    private static final AttributeRepository.AttributeKey<Boolean> CAGING_LOGGED_KEY = new AttributeRepository.AttributeKey<>();
 
     @Override
     public Path getUserHomeDir(SessionContext sessionContext) {
@@ -29,6 +33,7 @@ public class VecturaFileSystemFactory implements FileSystemFactory {
 
         if (homeDirStr == null) {
             LOG.error("No home directory found for session {}", sessionContext);
+            UILogManager.log(String.format("[FILESYSTEM] No home directory found for session: %s", sessionContext));
             throw new IOException("No home directory defined for session");
         }
 
@@ -37,10 +42,15 @@ public class VecturaFileSystemFactory implements FileSystemFactory {
 
         if (!Files.exists(homePath)) {
             LOG.warn("Home directory {} does not exist. Creating...", homePath);
+            UILogManager.log(String.format("[FILESYSTEM] Home directory '%s' does not exist. Creating...", homePath));
             Files.createDirectories(homePath);
         }
 
-        LOG.info("Caging user home directory at {}", homePath);
+        if (sessionContext.getAttribute(CAGING_LOGGED_KEY) == null) {
+            LOG.info("Caging user home directory at {}", homePath);
+            UILogManager.log(String.format("[FILESYSTEM] Caging user home directory at '%s'", homePath));
+            sessionContext.setAttribute(CAGING_LOGGED_KEY,true);
+        }
 
         return new RootedFileSystemProvider().newFileSystem(homePath, Collections.emptyMap());
     }
