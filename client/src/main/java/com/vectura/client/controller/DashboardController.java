@@ -106,7 +106,6 @@ public class DashboardController {
 
     // Servicios SFTP
     private SftpService sftpService;
-    private TransferManager transferManager;
 
     // Variables de Path
     private String currentLocalPath = "";
@@ -434,6 +433,8 @@ public class DashboardController {
             protected Void call() throws Exception {
                 updateMessage("Iniciando...");
 
+                TransferManager transferManager = sftpService.getTransferManager();
+
                 File localFile = new File(selected.getPath());
                 String remoteDest = currentRemotePath.endsWith("/") ?
                         currentRemotePath + selected.getName() :
@@ -577,6 +578,8 @@ public class DashboardController {
             protected Void call() throws Exception {
                 updateMessage("Iniciando conexion...");
 
+                TransferManager transferManager = sftpService.getTransferManager();
+
                 String remotePath = currentRemotePath.endsWith("/") ?
                         currentRemotePath + selected.getName() :
                         currentRemotePath + "/" + selected.getName();
@@ -718,13 +721,14 @@ public class DashboardController {
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
 
-                statusLabel.setText("🗑️ Eliminando...");
+                statusLabel.setText("Eliminando...");
 
                 // Ejecutar en segundo plano
                 new Thread(() -> {
                     try {
                         if (isLocal) {
                             // Borrado Local Recursivo
+                            TransferManager transferManager = sftpService.getTransferManager();
                             transferManager.deleteLocal(new File(selected.getPath()));
                         } else {
                             // Borrado Remoto Recursivo
@@ -732,6 +736,7 @@ public class DashboardController {
                                     currentRemotePath + selected.getName() :
                                     currentRemotePath + "/" + selected.getName();
 
+                            TransferManager transferManager = sftpService.getTransferManager();
                             transferManager.deleteRemote(remotePath);
                         }
 
@@ -877,8 +882,6 @@ public class DashboardController {
 
                 sftpService = new SftpService();
                 sftpService.connect(host, finalPort, user, pass);
-
-                transferManager = sftpService.getTransferManager();
 
                 currentRemotePath = sftpService.getSftpClient().canonicalize(".");
 
