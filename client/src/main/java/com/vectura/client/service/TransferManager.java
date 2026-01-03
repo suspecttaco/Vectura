@@ -23,24 +23,36 @@ public class TransferManager {
 
     // Subida
     public void upload(File localItem, String remotePath, TransferListener listener) throws IOException {
-        LOG.info("Uploading: {} -> {}", localItem.getName(), remotePath);
-
-        sftpClient.getFileTransfer().setTransferListener(listener);
-
-        sftpClient.getFileTransfer().upload(new FileSystemFile(localItem), remotePath);
+        try {
+            LOG.info("Uploading: {} -> {}", localItem.getName(), remotePath);
+            sftpClient.getFileTransfer().setTransferListener(listener);
+            sftpClient.getFileTransfer().upload(new FileSystemFile(localItem), remotePath);
+        } finally {
+            sftpClient.close();
+        }
     }
 
     // Bajada
     public void download(String remotePath, File localDestFolder, TransferListener listener) throws IOException {
-        LOG.info("Downloading: {} -> {}", remotePath, localDestFolder.getAbsolutePath());
+        try {
+            LOG.info("Downloading: {} -> {}", remotePath, localDestFolder.getAbsolutePath());
+            sftpClient.getFileTransfer().setTransferListener(listener);
+            sftpClient.getFileTransfer().download(remotePath, new FileSystemFile(localDestFolder));
+        } finally {
+            sftpClient.close();
+        }
+    }
 
-        sftpClient.getFileTransfer().setTransferListener(listener);
-
-        sftpClient.getFileTransfer().download(remotePath, new FileSystemFile(localDestFolder));
+    public void deleteRemote(String path) throws IOException {
+        try {
+            deleteRemoteRecursive(path);
+        } finally {
+            sftpClient.close();
+        }
     }
 
     // Borrar remoto
-    public void deleteRemote(String path) throws IOException {
+    public void deleteRemoteRecursive(String path) throws IOException {
         // Obtener atributos
         if (sftpClient.stat(path).getType() == FileMode.Type.DIRECTORY) {
 

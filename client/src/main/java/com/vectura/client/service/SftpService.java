@@ -82,7 +82,10 @@ public class SftpService {
 
     public TransferManager getTransferManager() throws IOException {
         ensureConnected();
-        return new TransferManager(this.sftpClient);
+
+        SFTPClient isolatedClient = sshClient.newSFTPClient();
+
+        return new TransferManager(isolatedClient);
     }
 
     public SFTPClient getSftpClient() {
